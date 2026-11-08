@@ -1,10 +1,10 @@
 /*
- * m92-pi - input lag without beam racing: frame phase and frame delay
+ * Input lag without beam racing: frame phase and frame delay
  *
- * Frame phase: each m92_run_frame() starts at line PHASE_LINE, the first line
- * after the picture, so it runs the vertical blank first (the game reads the
- * pads there) and then every visible line; the frame shown at the next vsync
- * already answers the pads read just before it (neo-pi's arrangement).
+ * Frame phase: each emulated frame starts at PHASE_LINE, the first line after
+ * the picture, so it runs the vertical blank first (the game reads the pads
+ * there) and then every visible line; the frame shown at the next vsync
+ * already answers the pads read just before it.
  *
  * Frame delay: the frame starts a few ms after the vsync instead of right
  * after it, so the pads are read later and the finished frame waits less
@@ -22,8 +22,9 @@
 #define PACING_H
 
 #include <circle/types.h>
+#include "project.h"
 
-#define PHASE_LINE	248		// first line after the picture
+#define PHASE_LINE	PROJECT_PHASE_LINE
 #define FRAME_US	16667
 
 struct TFrameDelay

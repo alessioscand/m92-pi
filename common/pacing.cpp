@@ -1,5 +1,5 @@
 /*
- * m92-pi - frame delay (see pacing.h)
+ * Frame delay (see pacing.h)
  */
 #include "pacing.h"
 

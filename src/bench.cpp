@@ -10,6 +10,8 @@
 #include "m92_api.h"
 #include <circle/machineinfo.h>
 
+static_assert (BENCH_FRAMES <= STATS_MAX_VALUES, "ComputeStats sorts at most STATS_MAX_VALUES");
+
 #define BENCH_PROFILE_US 200		// profiler: one sample every 200 us
 #define BENCH_SLOW_US	16000		// frames from 16 ms on count as slow
 

@@ -25,7 +25,11 @@ volatile boolean CInput::s_bChange = FALSE;
 volatile unsigned CInput::s_nChangeTicks = 0;
 
 static const char *MapKeys[MAP_COUNT] =
-	{"UP", "DOWN", "LEFT", "RIGHT", "A", "B", "C", "D", "START", "SELECT", "E", "F"};
+	{"UP", "DOWN", "LEFT", "RIGHT", "A", "B", "C", "D", "START", "SELECT",
+#if PROJECT_BUTTONS == 6
+	 "E", "F"
+#endif
+	};
 
 #define RAW_LOG_PER_PAD	40	// first raw changes logged for each pad
 
@@ -227,20 +231,24 @@ u32 CInput::MapPad (unsigned nIndex, const TGamePadState *pState)
 		if (b & GamePadButtonB)		n |= BTN_B;
 		if (b & GamePadButtonX)		n |= BTN_C;
 		if (b & GamePadButtonY)		n |= BTN_D;
+#if PROJECT_BUTTONS == 6
 		if (b & GamePadButtonLB)	n |= BTN_E;
 		if (b & GamePadButtonRB)	n |= BTN_F;
+#endif
 		if (b & (GamePadButtonStart | GamePadButtonPlus))	n |= BTN_START;
 		if (b & (GamePadButtonSelect | GamePadButtonMinus))	n |= BTN_SELECT;
 	}
 	else
 	{
-		// Generic HID pad / arcade encoder: buttons 1-6 = A-F, 9 = Select, 10 = Start
+		// Generic HID pad / arcade encoder: buttons 1-4 (1-6) = A-D (A-F), 9 = Select, 10 = Start
 		if (b & (1u << 0))	n |= BTN_A;
 		if (b & (1u << 1))	n |= BTN_B;
 		if (b & (1u << 2))	n |= BTN_C;
 		if (b & (1u << 3))	n |= BTN_D;
+#if PROJECT_BUTTONS == 6
 		if (b & (1u << 4))	n |= BTN_E;
 		if (b & (1u << 5))	n |= BTN_F;
+#endif
 		if (b & (1u << 8))	n |= BTN_SELECT;
 		if (b & (1u << 9))	n |= BTN_START;
 
@@ -366,7 +374,7 @@ void CInput::KeyboardRemovedHandler (CDevice *, void *pContext)
 
 void CInput::KeyboardRawHandler (unsigned char, const unsigned char RawKeys[6])
 {
-	// Hidden fallback for testing: arrows, Z X C V B N = A B C D E F,
+	// Hidden fallback for testing: arrows, Z X C V (B N) = A B C D (E F),
 	// Enter = Start, 5 / Space = Select (coin), Esc = menu
 	u32 n = 0;
 	for (unsigned i = 0; i < 6; i++)
@@ -381,8 +389,10 @@ void CInput::KeyboardRawHandler (unsigned char, const unsigned char RawKeys[6])
 		case 0x1B: n |= BTN_B;		break;	// X
 		case 0x06: n |= BTN_C;		break;	// C
 		case 0x19: n |= BTN_D;		break;	// V
+#if PROJECT_BUTTONS == 6
 		case 0x05: n |= BTN_E;		break;	// B
 		case 0x11: n |= BTN_F;		break;	// N
+#endif
 		case 0x28: n |= BTN_START;	break;	// Enter
 		case 0x22: case 0x2C: n |= BTN_SELECT; break;	// 5, Space
 		case 0x29: n |= BTN_MENU;	break;	// Esc

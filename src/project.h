@@ -11,6 +11,12 @@
 #define PROJECT_WIDTH	320
 #define PROJECT_HEIGHT	240
 
+/* Buttons besides the directions, START and SELECT: A B C D E F */
+#define PROJECT_BUTTONS	6
+
+/* Each emulated frame starts here: the first line after the picture */
+#define PROJECT_PHASE_LINE	248
+
 /* Error codes = number of green LED blinks when the screen is unusable */
 #define PROJECT_ERR_FB    2   /* framebuffer / HDMI */
 #define PROJECT_ERR_SD    3   /* SD card or FAT filesystem */

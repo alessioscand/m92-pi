@@ -1,5 +1,5 @@
 /*
- * m92-pi - timing statistics: the benchmark's and the per-minute LOG.TXT lines
+ * Timing statistics: the benchmark's and the per-minute LOG.TXT lines
  */
 #ifndef STATS_H
 #define STATS_H
@@ -15,7 +15,8 @@ struct TStats
 	unsigned nAvg, nP99, nMax, nMin;
 };
 
-void ComputeStats (const unsigned *pValues, unsigned nCount, TStats *pStats);	// nCount <= BENCH_FRAMES
+#define STATS_MAX_VALUES 3600
+void ComputeStats (const unsigned *pValues, unsigned nCount, TStats *pStats);	// nCount <= STATS_MAX_VALUES
 
 // Histogram in 0.1 ms bins (0..50 ms)
 struct THisto

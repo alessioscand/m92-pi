@@ -264,7 +264,7 @@ Mostly neo-pi's, see neo-pi's `BUILD.md` for the shared parts.
 
 | file | role |
 |---|---|
-| `project.h` | name, version, picture size, LED error codes, `project_log` / `project_fatal`: everything `common/` needs from the project |
+| `project.h` | name, version, picture size, buttons, frame phase line, LED error codes, `project_log` / `project_fatal`: everything `common/` needs from the project |
 | `kernel.h`, `kernel.cpp` | the kernel class; start-up, starting cores 1 and 2, the main flow (list, game, list...), power off |
 | `console.cpp` | the start-up log on screen, serial and `LOG.TXT`; fatal errors |
 | `settings.cpp` | `m92pi.cfg`, the video mode it asks for, `pads.cfg` |
@@ -274,8 +274,7 @@ Mostly neo-pi's, see neo-pi's `BUILD.md` for the shared parts.
 | `gameloop.cpp` | `RunGame`: pads to the M92 panels, one emulated frame per screen frame, the in-game menu, the status line |
 | `frame.h/.cpp` | the emulated frame: picture and sound buffers, where the lines go (screen, core 1, COMPOSITE on core 2), cabinet voicing |
 | `racing.h/.cpp` | beam racing state for the game loop (`g_Race`), the line hook |
-| `pacing.h/.cpp` | frame phase and frame delay (`framedelay=`) when not racing |
-| `stats.h/.cpp` | timing statistics for `BENCH.TXT` and the per-minute log lines |
+| `report.cpp` | the per-minute report in `LOG.TXT` |
 | `bench.cpp` | BENCH and MCTEST |
 | `mcline.h/.cpp` | multicore line drawing: core 0 queues `(y, line_regs)` in a ring, core 1 draws; `McSync()` before VRAM/palette/sprites change; if core 1 stops answering for 0.5 s it falls back to single core and logs it |
 | `screen.h` | `CScreen`, the only interface the kernel draws through (game, menus, console) |
@@ -290,8 +289,8 @@ files, chosen in `kernel.h`; nothing else in the kernel changes.
 
 ### 4.2 `common/`
 
-Nothing M92 in it: it takes what it needs from `project.h`, so the same
-files can serve neo-pi and nes-pi.
+Nothing M92 in it: it takes what it needs from `project.h`. The same files
+are in neo-pi, byte for byte.
 
 | file | role |
 |---|---|
@@ -300,9 +299,11 @@ files can serve neo-pi and nes-pi.
 | `race.cpp`, `raster.cpp` | beam racing (HVS line counter measured at start-up); `RACE_ROWS` must be the picture's height (240; neo-pi has 224). If rows are late in too many frames racing gives up for that game; `Rearm()` tries again at the next game started from the list. `test/race_sim.cpp` tests them on the host |
 | `tvcore.cpp`, `composite.c` | COMPOSITE (blargg's snes_ntsc) on core 2, line by line |
 | `fbmap.cpp` | the framebuffer mapped as write-combining memory |
-| `input.cpp` | USB pads and keyboard, `PROJECT_FAKEPAD` for QEMU. Logical buttons A-F (`BTN_E`/`BTN_F` are bits 10-11, `BTN_MENU` bit 12); CONTROLS asks A B C D E F SELECT START, all of them (`pads.cfg` files with `E=-` from earlier versions still load). Without a set-up: LB/RB on known layouts, buttons 5-6 on generic pads, B/N on the keyboard |
+| `input.cpp` | USB pads and keyboard, `PROJECT_FAKEPAD` for QEMU. Logical buttons A-F (`BTN_E`/`BTN_F` are bits 10-11, used when `PROJECT_BUTTONS` is 6; `BTN_MENU` bit 12); CONTROLS asks A B C D E F SELECT START, all of them (`pads.cfg` files with `E=-` from earlier versions still load). Without a set-up: LB/RB on known layouts, buttons 5-6 on generic pads, B/N on the keyboard |
 | `audio.cpp` | HDMI audio with drift correction |
 | `profile.cpp` | sampling profiler for the benchmark |
+| `pacing.h/.cpp` | frame phase (`PROJECT_PHASE_LINE`) and frame delay (`framedelay=`) when not racing |
+| `stats.h/.cpp` | timing statistics: histograms, averages, percentiles (`BENCH.TXT`, the per-minute log lines) |
 
 Buttons in `RunGame`: A and B are buttons 1 and 2, the only ones the games use.
 C D E F (buttons 3-6) are for Superior Soldiers / Perfect Soldiers only, as on

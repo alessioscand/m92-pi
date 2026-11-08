@@ -4,7 +4,7 @@
  *
  * The class is implemented by area: kernel.cpp (start-up, power off),
  * console.cpp, games.cpp, hiscore.cpp, settings.cpp, menus.cpp, gameloop.cpp,
- * bench.cpp, stats.cpp, racing.cpp.
+ * bench.cpp, report.cpp, racing.cpp.
  */
 #ifndef KERNEL_H
 #define KERNEL_H
@@ -163,7 +163,7 @@ private:
 	void Benchmark (void);
 	void McTest (unsigned nSel);
 
-	// stats.cpp, racing.cpp
+	// report.cpp, racing.cpp
 	void ResetGameStats (void);
 	void ReportWindow (boolean bFinal);
 	void SetupBeamRacing (void);
