@@ -3,8 +3,8 @@ m92-pi 1.0.0 - Bare-metal Irem M92 emulator for Raspberry Pi 3 and 4
 
 WHAT'S NEW IN 1.0.0
 
-  - The first stable release: the code has been reorganised from top to
-    bottom. Emulation, speed and options are the same as in 0.1.2.
+  - The first stable release: the code has been reorganised
+    from top to bottom.
   - To update a card, copy the new files over the old ones: games,
     saves, hiscores, settings and pads.cfg in m92pi are kept and work
     as before.
@@ -117,7 +117,7 @@ STATUS LINE (Select + C)
   - DLY: the frame delay in ms. With beam racing, RACE instead: the ms
     from reading the pads to sending the top of the picture to the TV.
 
-INPUT LAG
+LOW INPUT LAG
 
   Each frame starts with the vertical blank, when the games read the pads,
   then draws the picture: the next frame shown already answers the pads.
@@ -136,7 +136,7 @@ INPUT LAG
   The M92 runs at 60.01 Hz: on a 60 Hz TV, one frame in about 100 seconds
   is repeated or skipped.
 
-PICTURE
+PIXEL PERFECT
 
   Integer scaling only (square pixels, never stretched), with black
   borders. 1080p: 1280x960 picture. 720p: 960x720 picture.
