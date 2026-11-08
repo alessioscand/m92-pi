@@ -1,0 +1,46 @@
+# m92-pi - names in the game list
+# One line per MAME set: set=Title, or set=Title|Region to choose the text
+# shown under the list too. Without |Region, the region comes from MAME's
+# name ("Hook (Japan)" -> JAPAN). A set missing here shows MAME's full name.
+# Titles longer than 33 characters are cut in the list.
+
+bmaster=Blade Master
+crossbld=Cross Blades!
+dsoccr94j=Dream Soccer '94|Japan
+geostorm=Geo Storm|Japan 014
+geostorma=Geo Storm|Japan 026
+gunforc2=Gun Force II
+gunforce=Gunforce
+gunforcej=Gunforce
+gunforceu=Gunforce
+gunhohki=Mahou Keibitai Gun Hohki
+hook=Hook
+hookj=Hook
+hooku=Hook
+inthunt=In The Hunt
+inthuntk=In The Hunt|Korea
+inthuntu=In The Hunt
+kaiteids=Kaitei Daisensou
+leaguemn=Yakyuu Kakutou League-Man|Japan Set 1
+leaguemna=Yakyuu Kakutou League-Man|Japan Set 2
+lethalth=Lethal Thunder
+majtitl2=Major Title 2|World Set 1
+majtitl2a=Major Title 2|World Set 2
+majtitl2b=Major Title 2|World Set 3
+majtitl2j=Major Title 2
+mysticri=Mystic Riders
+mysticrib=Mystic Riders|Bootleg
+nbbatman=Ninja Baseball Bat Man
+nbbatmanu=Ninja Baseball Bat Man
+psoldier=Perfect Soldiers
+rtypeleo=R-Type Leo
+rtypeleoj=R-Type Leo
+skingame=The Irem Skins Game|US Set 1
+skingame2=The Irem Skins Game|US Set 2
+ssoldier=Superior Soldiers
+thndblst=Thunder Blaster
+uccops=Undercover Cops
+uccopsar=Undercover Cops Alpha|World
+uccopsaru=Undercover Cops Alpha|US
+uccopsj=Undercover Cops
+uccopsu=Undercover Cops

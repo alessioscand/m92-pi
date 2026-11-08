@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>m92-pi – bare-metal Irem M92 emulator for Raspberry Pi</title>
+<meta name="description" content="m92-pi is a free, bare-metal Irem M92 arcade emulator for Raspberry Pi 3 and 4: no operating system, MAME romsets, beam racing, USB pads polled every 1 ms.">
+<link rel="canonical" href="https://alessioscand.github.io/m92-pi/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://alessioscand.github.io/m92-pi/">
+<meta property="og:site_name" content="m92-pi">
+<meta property="og:title" content="m92-pi – bare-metal Irem M92 emulator for Raspberry Pi">
+<meta property="og:description" content="The Irem M92 arcade board on a Raspberry Pi, with no operating system.">
+<meta property="og:image" content="https://alessioscand.github.io/m92-pi/img/game.png">
+<meta property="og:image:width" content="640">
+<meta property="og:image:height" content="480">
+<meta property="og:image:alt" content="Undercover Cops on the beach, running on m92-pi">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/svg+xml" href="img/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   Colours and fonts
+   ========================================================================== */
+:root {
+  --bg:      #000000;  /* the board's black */
+  --ink:     #D9E2E3;  /* text */
+  --dim:     #6F878A;  /* labels, captions */
+  --rule:    #15262A;  /* hairlines */
+  --cyan:    #37D6D6;  /* the logo's i, top: accent */
+  --cyan-bg: rgba(55, 214, 214, .35);
+  --green:   #83FA27;  /* the logo's i, bottom: pads read, status */
+  --pink:    #FF4FA8;  /* the heart, as on neo-pi and nes-pi */
+  --rust:    #FF3B1F;  /* easter egg: the red desert of Hardware (1990) */
+
+  --title:   "Share Tech Mono", "JetBrains Mono", ui-monospace, monospace;  /* title and labels */
+  --mono:    "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+
+/* ==========================================================================
+   Page
+   ========================================================================== */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { color-scheme: dark; background: var(--bg); scroll-behavior: smooth; overflow-x: clip; }
+
+body {
+  margin: 0;
+  padding: 0 max(16px, env(safe-area-inset-right, 0px)) 64px max(16px, env(safe-area-inset-left, 0px));
+  background: var(--bg);
+  color: var(--ink);
+  font: 15px/1.65 var(--mono);
+}
+
+.sheet { max-width: 920px; margin: 0 auto; }
+
+a       { color: var(--cyan); text-decoration: none; border-bottom: 1px solid currentColor; }
+a:hover { color: var(--ink); }
+a:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+::selection { background: var(--cyan); color: var(--bg); }
+
+.nowrap { white-space: nowrap; }
+code { color: var(--cyan); font-family: var(--mono); }
+kbd  { padding: 2px 6px; border: 1px solid var(--dim); font: 600 12px/1 var(--mono); color: var(--ink); }
+
+/* ==========================================================================
+   Top strip
+   ========================================================================== */
+.strip {
+  display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px 24px;
+  padding-block: 14px;
+  border-bottom: 1px solid var(--rule);
+  font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--dim);
+}
+.strip nav     { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 18px; }
+.strip a       { color: var(--dim); border: 0; }
+.strip a:hover { color: var(--cyan); }
+.heart         { display: inline-flex; align-items: center; min-height: 20px; }
+.heart svg     { display: block; transition: transform 180ms; }
+.heart:hover svg, .heart:focus-visible svg { transform: scale(1.25); }
+
+/* ==========================================================================
+   Logo, title, download
+   ========================================================================== */
+.hero {
+  display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 40px; align-items: center;
+  padding-block: 56px 48px;
+  border-bottom: 1px solid var(--rule);
+}
+.logo img { display: block; width: 100%; height: auto; }
+.hero h1 {
+  margin: 0 0 26px;
+  font: 400 clamp(22px, 3.6vw, 30px)/1.3 var(--title);
+  letter-spacing: -0.01em; text-wrap: balance;
+}
+
+/* bare-metal / beam-racing, 5.4 s each. The change flickers like a failing
+   sign out in the wasteland; the cell is as wide as the word shown (10 or 11
+   characters of a monospace font), switched while both words are dark, so
+   the line keeps its left edge and a single space before "Irem". */
+.swap      { display: inline-grid; grid-template-columns: minmax(0, 1fr); justify-items: start;
+             width: calc(10ch - .1em); animation: cell 12s linear infinite; }	/* -.01em letter-spacing per character */
+.swap > *  { grid-area: 1 / 1; white-space: nowrap; animation: 12s linear infinite; }
+@keyframes cell {
+  0%, 47.9%  { width: calc(10ch - .1em); }
+  48%, 95.1% { width: calc(11ch - .11em); }
+  95.2%, 100% { width: calc(10ch - .1em); }
+}
+.swap .a   { animation-name: flick-a; }
+.swap .b   { animation-name: flick-b; opacity: 0; }
+@keyframes flick-a {
+  0%, 45%  { opacity: 1; }   45.6% { opacity: .2; }  46.2% { opacity: .9; }  47% { opacity: 0; }
+  47.6%    { opacity: .6; }  48.2%, 95% { opacity: 0; }
+  95.6%    { opacity: .7; }  96.2% { opacity: .1; }  97% { opacity: .9; }  97.6% { opacity: .3; }  98.4%, 100% { opacity: 1; }
+}
+@keyframes flick-b {
+  0%, 47.8% { opacity: 0; }  48.4% { opacity: .7; } 49% { opacity: .1; }  49.8% { opacity: .9; }  50.4% { opacity: .3; }  51.2%, 93% { opacity: 1; }
+  93.6%     { opacity: .2; } 94.2% { opacity: .9; } 95% { opacity: 0; }   95.4% { opacity: .5; }  95.8%, 100% { opacity: 0; }
+}
+
+.download {
+  display: inline-block; margin-bottom: 14px; padding: 10px 18px;
+  border: 1px solid var(--cyan); color: var(--cyan);
+  font: 400 16px/1 var(--title); letter-spacing: .1em; text-transform: uppercase;
+  -webkit-text-stroke: .35px currentColor;
+}
+.download:hover { background: var(--cyan); color: var(--bg); }
+.download svg   { display: inline-block; margin-right: 10px; vertical-align: -1px; }
+
+.status   { font-size: 13px; color: var(--dim); }
+.status b { font-weight: 400; color: var(--green); animation: led .9s ease-in-out infinite alternate; }	/* pulses softly */
+@keyframes led { from { opacity: 1; } to { opacity: .35; } }
+
+/* ==========================================================================
+   Sections: number and name on the left, content on the right
+   ========================================================================== */
+section {
+  display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 8px 32px;
+  padding-block: 40px;
+  border-bottom: 1px solid var(--rule);
+}
+section > h2 {
+  margin: 0;
+  font: 400 15px/1.6 var(--title); letter-spacing: .1em; text-transform: uppercase; color: var(--dim);
+  -webkit-text-stroke: .35px currentColor;
+}
+section > h2 span { color: var(--cyan); }
+.content { min-width: 0; }
+.content p { margin: 0 0 16px; max-width: 66ch; }
+/* the one key word of a section, marked like a selection on the screen */
+.content strong {
+  padding: 1px 5px; font-weight: 600;
+  background: var(--cyan); color: var(--bg);
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+}
+
+h3 {
+  margin: 28px 0 12px;
+  font: 400 15px/1.5 var(--title); letter-spacing: .1em; text-transform: uppercase;
+  -webkit-text-stroke: .35px currentColor;
+}
+h3:first-child { margin-top: 0; }
+
+/* label / value lists (board, controls) */
+.kv       { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 24px; margin: 0; }
+.kv dt    { color: var(--dim); }
+.kv dd    { margin: 0; font-variant-numeric: tabular-nums; }
+.kv small { font-size: 13px; color: var(--dim); }
+
+/* ==========================================================================
+   Screenshots: 640x480 images shown at 320 px (sharp scanlines on 2x screens)
+   ========================================================================== */
+.shots { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 320px)); gap: 20px; }
+.shots figure     { margin: 0; }
+.shots img        { display: block; width: 100%; height: auto; border: 1px solid var(--rule); }
+/* smooth scaling, not pixelated: at 1.5x or 3x screens (most phones) nearest
+   neighbour turns the scanlines into uneven bands */
+.shots figcaption { margin-top: 6px; font-size: 12px; color: var(--dim); }
+
+/* COMPOSITE detail, 320x240 pixels of the 1080p picture: the dot crawl cycles
+   through the 3 burst phases (one per frame on the TV), as on the nes-pi logo */
+.crt            { position: relative; }
+.crt .composite {
+  position: absolute; inset: 1px; pointer-events: none;
+  background: url(img/composite-crawl.png) 0 0 / 100% 300%;
+  image-rendering: pixelated;
+  animation: crawl 150ms steps(3) infinite;
+}
+@keyframes crawl { to { background-position: 0 150%; } }
+/* a light black vignette, like the curved glass of a TV */
+.crt::after {
+  content: ""; position: absolute; inset: 1px; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0) 55%, rgba(0,0,0,.28) 85%, rgba(0,0,0,.55) 100%);
+}
+
+/* ==========================================================================
+   Frame: a button press followed over three frames, two emulators
+   ========================================================================== */
+.timeline { display: grid; grid-template-columns: 110px 132px minmax(0, 1fr); gap: 10px 14px; align-items: center; font-size: 12px; }
+.timeline .label     { color: var(--dim); }
+.timeline .label.ours { color: var(--cyan); }
+.timeline .spacer    { grid-column: 1 / 3; }
+
+.tv { display: block; width: 132px; height: auto; border: 1px solid var(--rule); image-rendering: pixelated; }
+
+.scale      { position: relative; height: 18px; font-size: 11px; color: var(--dim); font-variant-numeric: tabular-nums; }
+.scale span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.scale .s0  { left: 0; transform: none; }
+.scale .s1  { left: 33.333%; }
+.scale .s2  { left: 66.667%; }
+.scale .s3  { left: 100%; transform: translateX(-100%); }
+
+/* one column per frame (16.7 ms) */
+.track {
+  position: relative; height: 30px;
+  border: 1px solid var(--rule);
+  background: repeating-linear-gradient(90deg, transparent 0 calc(33.333% - 1px), var(--rule) calc(33.333% - 1px) 33.333%);
+}
+.event    { position: absolute; top: 3px; bottom: 3px; opacity: .25; transition: opacity .15s; }
+.event.on { opacity: 1; }
+.press    { width: 4px; background: var(--ink); }
+.read     { width: 4px; background: var(--green); }
+/* rendering on the upper half of the track, sending on the lower half: with
+   beam racing the two overlap, line by line */
+.drawn    { bottom: calc(50% + 1px); background: var(--cyan-bg); border: 1px solid var(--cyan); }
+.shown    { top: calc(50% + 1px); background: var(--cyan); }
+.playhead { position: absolute; top: -4px; bottom: -4px; width: 1px; background: var(--ink); }
+
+.key   { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 12px; font-size: 12px; color: var(--dim); }
+.key i { display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: -2px; }
+.key .press, .key .read, .key .drawn, .key .shown { position: static; width: 12px; height: 12px; }
+
+.readout { min-height: 1.6em; margin-top: 12px; font-size: 13px; font-variant-numeric: tabular-nums; }
+
+/* ==========================================================================
+   Games
+   ========================================================================== */
+.scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+th {
+  padding: 0 16px 8px 0; border-bottom: 1px solid var(--rule); text-align: left;
+  font: 400 13px/1.6 var(--title); letter-spacing: .08em; text-transform: uppercase; color: var(--dim);
+  -webkit-text-stroke: .35px currentColor;
+}
+td                { padding: 7px 16px 7px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+td:nth-child(2)   { white-space: nowrap; }	/* game titles on one line; the sets wrap */
+td.sets           { color: var(--dim); }
+tr:hover td.sets  { color: var(--cyan); }
+.note             { font-size: 13px; color: var(--dim); }
+
+/* ==========================================================================
+   Install
+   ========================================================================== */
+.steps             { margin: 0; padding-left: 22px; }
+.steps li          { margin-bottom: 10px; }
+.steps li::marker  { color: var(--cyan); }
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+/* credits: laid out like a section, smaller, not in the menu */
+footer {
+  display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 8px 32px;
+  padding-top: 32px; font-size: 12px; color: var(--dim);
+}
+footer h2 {
+  margin: 0;
+  font: 400 13px/1.9 var(--title); letter-spacing: .1em; text-transform: uppercase; color: var(--dim);
+  -webkit-text-stroke: .35px currentColor;
+}
+footer .lines { display: grid; gap: 8px; min-width: 0; }
+.siblings { margin-top: 18px !important; font-size: 13px; color: var(--dim); }
+.human { color: var(--pink); }
+.siblings small { font-size: 11px; letter-spacing: .06em; color: var(--dim); }
+
+/* ==========================================================================
+   Small screens, reduced motion
+   ========================================================================== */
+@media (max-width: 720px) {
+  /* menu on one line, spread edge to edge */
+  .strip     { font-size: 11px; letter-spacing: .04em; }
+  .strip nav { flex-wrap: nowrap; justify-content: space-between; width: 100%; gap: 0 8px; }
+  .hero     { grid-template-columns: minmax(0, 1fr); gap: 28px; padding-block: 36px; }
+  .logo     { max-width: none; }	/* the logo spans the column on a phone */
+  /* ROMs on a phone: no Year column; each game is one row of title, players
+     and buttons, with its MAME sets on a line below, so the table neither
+     scrolls sideways nor grows into a long column of set names */
+  #games th:first-child, #games td:first-child { display: none; }
+  #games tr { display: grid; grid-template-columns: minmax(0, 1fr) 3.5em 3.5em; column-gap: 8px; border-bottom: 1px solid var(--rule); }
+  #games th, #games td { padding: 0; border: 0; }
+  #games tbody tr { padding-block: 9px; }
+  #games thead tr { padding-bottom: 8px; }
+  #games th:last-child { display: none; }
+  #games td:nth-child(2) { white-space: normal; }
+  #games td.sets { grid-column: 1 / -1; margin-top: 2px; font-size: 12.5px; }
+  section, footer { grid-template-columns: minmax(0, 1fr); }
+  section   { padding-block: 32px; }
+  .timeline { grid-template-columns: 96px minmax(0, 1fr); }
+  .timeline .spacer { grid-column: 1; }
+  .timeline .label  { grid-column: 1 / 3; }
+  .tv       { width: 96px; }
+}
+/* ==========================================================================
+   Easter egg: click the status light. Hardware (Richard Stanley, 1990):
+   the page glitches red and M.A.R.K. 13 speaks
+   ========================================================================== */
+.led               { all: unset; cursor: pointer; }
+.led:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.mark13 {
+  min-height: 1.4em; margin-top: 6px;
+  font: 400 15px/1.4 var(--title); letter-spacing: .12em; text-transform: uppercase;
+  color: var(--rust); -webkit-text-stroke: .35px currentColor;
+}
+html.hw .status b  { color: var(--rust); animation: none; }
+html.hw .tested    { color: var(--rust); }
+html.hw h1, html.hw .mark13 { text-shadow: 2px 0 var(--rust), -2px 0 var(--cyan); }
+html.hw body::after {	/* red dust and a torn signal over everything */
+  content: ""; position: fixed; inset: 0; z-index: 50; pointer-events: none;
+  background:
+    repeating-linear-gradient(to bottom, rgba(255,59,31,.12) 0 2px, transparent 2px 4px),
+    linear-gradient(rgba(150,20,0,.22), rgba(150,20,0,.22));
+  animation: hw-dust 90ms steps(2) infinite;
+}
+html.hw-shake .sheet { animation: hw-shake 1.8s steps(1, end) both; }
+@keyframes hw-dust { 50% { opacity: .55; background-position: 0 2px, 0 0; } }
+@keyframes hw-shake {
+  0%   { transform: translate(-6px, 0) skewX(4deg);   filter: saturate(2) hue-rotate(-25deg); }
+  6%   { transform: translate(9px, -2px);              filter: contrast(1.6); }
+  12%  { transform: translate(-3px, 3px) skewX(-6deg); filter: saturate(3) hue-rotate(-40deg); }
+  18%  { transform: none;                              filter: none; }
+  30%  { transform: translate(12px, 0) skewX(-3deg);  filter: contrast(2) saturate(2); }
+  34%  { transform: translate(-8px, 1px);              filter: hue-rotate(-30deg); }
+  40%  { transform: none;                              filter: none; }
+  58%  { transform: translate(5px, -1px) skewX(8deg);  filter: saturate(2.5) hue-rotate(-35deg); }
+  63%  { transform: translate(-10px, 0);               filter: contrast(1.8); }
+  68%, 100% { transform: none;                         filter: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html   { scroll-behavior: auto; }
+  html.hw body::after, html.hw-shake .sheet { animation: none; }
+  .event { transition: none; }
+  .status b, .swap, .swap .a, .crt .composite { animation: none; }
+  .swap .b { display: none; }
+  .heart svg { transition: none; }
+}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+<header class="strip">
+  <nav aria-label="Sections">
+    <a href="#board">Metal</a>
+    <a href="#screens">Visions</a>
+    <a href="#frame">Beam</a>
+    <a href="#games">Roms</a>
+    <a href="#install">Install</a>
+    <a href="#controls">Controls</a>
+    <a class="heart" href="#support" aria-label="Support" title="Support"><svg aria-hidden="true" width="21" height="18" viewBox="0 0 7 6" shape-rendering="crispEdges"><path d="M1 0h2v1h1V0h2v1h1v2h-1v1h-1v1h-1v1H3V5H2V4H1V3H0V1h1z" fill="#FF4FA8"/></svg></a>
+  </nav>
+</header>
+
+<div class="hero">
+  <div class="logo"><img src="img/logo.svg" alt="m92-pi, with ベアメタル (bare metal) in katakana" width="516" height="164"></div>
+  <div>
+    <h1><span class="swap"><span class="a">bare-metal</span><span class="b" aria-hidden="true">beam-racing</span></span> Irem M92 emulator for Raspberry Pi.</h1>
+    <a class="download" href="https://github.com/alessioscand/m92-pi/releases/latest">Download now</a>
+    <div class="status">
+      <span class="nowrap">1.0.0</span> ·
+      <span class="nowrap">for Raspberry Pi 3 and 4</span> ·
+      <span class="nowrap">free · GPLv3</span> ·
+      <span class="nowrap"><button class="led" type="button" aria-label="Status light"><b>●</b></button> <span class="tested">tested on hardware</span></span>
+    </div>
+    <div class="mark13" aria-live="polite"></div>
+  </div>
+</div>
+
+<section id="board">
+  <h2><span>01</span> Bare metal</h2>
+  <div class="content">
+    <h3>JAMMA</h3>
+    <dl class="kv">
+      <dt>Main CPU</dt>   <dd>NEC V33 · 9 MHz <small>(TURBO: 20 MHz)</small></dd>
+      <dt>Sound CPU</dt>  <dd>NEC V35 · 14.318 MHz <small>(opcodes decrypted with each game's Irem table)</small></dd>
+      <dt>FM</dt>         <dd>YM2151 · 3.58 MHz <small>(ymfm)</small></dd>
+      <dt>PCM</dt>        <dd>Irem GA20 · 4 channels</dd>
+      <dt>Video</dt>      <dd>GA21 sprite DMA · GA22 sprites · GA23 three tile layers</dd>
+      <dt>Picture</dt>    <dd>320 × 240 · 60.01 Hz <small>(424 × 262 at a 6.67 MHz pixel clock)</small></dd>
+      <dt>Interrupts</dt> <dd>µPD71059 (8259)</dd>
+    </dl>
+    <h3>RPi</h3>
+    <dl class="kv">
+      <dt>Core 0</dt> <dd>V33 · V35 · YM2151 · GA20 · 8259 <small>(+ pads and UI)</small></dd>
+      <dt>Core 1</dt> <dd>GA21 · GA22 · GA23 <small>(draws each line just before it is sent)</small></dd>
+      <dt>Core 2</dt> <dd>COMPOSITE filter <small>(when chosen)</small></dd>
+      <dt>Output</dt> <dd>HDMI 1080p (4×) or 720p (3×), integer scaling · 48 kHz audio</dd>
+      <dt>Pads</dt>   <dd>USB, polled every 1 ms · up to 4 players</dd>
+    </dl>
+  </div>
+</section>
+
+<section id="screens">
+  <h2><span>02</span> Visions</h2>
+  <div class="content">
+    <div class="shots">
+      <figure><img src="img/list.png" width="640" height="480" loading="lazy" alt="Game list with the m92-pi logo"><figcaption>Game list</figcaption></figure>
+      <figure><img src="img/game.png" width="640" height="480" loading="lazy" alt="Undercover Cops in play, on the beach"><figcaption>Undercover Cops</figcaption></figure>
+      <figure><div class="crt"><img src="img/composite.png" width="640" height="480" loading="lazy" alt="Detail of Undercover Cops through the COMPOSITE filter: colour fringes and dot crawl on the edges"><div class="composite" aria-hidden="true"></div></div><figcaption>Optional COMPOSITE filter (detail)</figcaption></figure>
+      <figure><img src="img/in-game-menu.png" width="640" height="480" loading="lazy" alt="In-game menu"><figcaption>In-game menu</figcaption></figure>
+      <figure><img src="img/dip-switches.png" width="640" height="480" loading="lazy" alt="DIP switches menu"><figcaption>DIP switches</figcaption></figure>
+      <figure><img src="img/options.png" width="640" height="480" loading="lazy" alt="Options menu"><figcaption>Options</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section id="frame">
+  <h2><span>03</span> Beam racing</h2>
+  <div class="content">
+    <p>m92-pi uses <strong>beam racing</strong> to send each scanline to the TV as soon as it is rendered, in sync with the display's refresh. An emulator with double buffering instead waits for the entire frame to be rendered before presenting it, adding up to one frame of latency.</p>
+    <div class="timeline">
+      <div class="spacer"></div>
+      <div class="scale" aria-hidden="true"><span class="s0">0 ms</span><span class="s1">16.7</span><span class="s2">33.4</span><span class="s3">50 ms</span></div>
+
+      <div class="label ours">beam racing</div>
+      <canvas class="tv" width="320" height="240" data-shown=".364" aria-label="What the TV shows with m92-pi"></canvas>
+      <div class="track">
+        <div class="event press" data-at=".08"></div>
+        <div class="event read"  data-at=".3333"></div>
+        <div class="event drawn" data-at=".336" data-width=".31"></div>
+        <div class="event shown" data-at=".364" data-width=".3333"></div>
+        <div class="playhead"></div>
+      </div>
+
+      <div class="label">double buffering</div>
+      <canvas class="tv" width="320" height="240" data-shown=".6667" aria-label="What the TV shows with a double-buffered emulator"></canvas>
+      <div class="track">
+        <div class="event press" data-at=".08"></div>
+        <div class="event read"  data-at=".3333"></div>
+        <div class="event drawn" data-at=".336"  data-width=".12"></div>
+        <div class="event shown" data-at=".6667" data-width=".3333"></div>
+        <div class="playhead"></div>
+      </div>
+    </div>
+    <div class="key">
+      <span><i class="press"></i>button pressed</span>
+      <span><i class="read"></i>the game reads the pads</span>
+      <span><i class="drawn"></i>frame rendered</span>
+      <span><i class="shown"></i>frame sent to the TV, line by line</span>
+    </div>
+    <div class="readout" aria-live="off"></div>
+  </div>
+</section>
+
+<section id="games">
+  <h2><span>04</span> ROMs</h2>
+  <div class="content">
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>Year</th><th>Game</th><th>Pl.</th><th>Btn.</th><th>MAME sets</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1991</td><td>Blade Master</td>           <td>2</td><td>2</td><td class="sets">bmaster crossbld</td></tr>
+          <tr><td>1991</td><td>Gunforce</td>               <td>2</td><td>2</td><td class="sets">gunforce gunforcej gunforceu</td></tr>
+          <tr><td>1991</td><td>Lethal Thunder</td>         <td>2</td><td>2</td><td class="sets">lethalth thndblst</td></tr>
+          <tr><td>1992</td><td>Hook</td>                   <td>4</td><td>2</td><td class="sets">hook hooku hookj</td></tr>
+          <tr><td>1992</td><td>Major Title 2</td>          <td>4</td><td>2</td><td class="sets">majtitl2 majtitl2a majtitl2b majtitl2j skingame skingame2</td></tr>
+          <tr><td>1992</td><td>Mystic Riders</td>          <td>2</td><td>2</td><td class="sets">mysticri gunhohki mysticrib</td></tr>
+          <tr><td>1992</td><td>R-Type Leo</td>             <td>2</td><td>2</td><td class="sets">rtypeleo rtypeleoj</td></tr>
+          <tr><td>1992</td><td>Undercover Cops</td>        <td>3</td><td>2</td><td class="sets">uccops uccopsu uccopsj uccopsar uccopsaru</td></tr>
+          <tr><td>1993</td><td>In The Hunt</td>            <td>2</td><td>2</td><td class="sets">inthunt inthuntu kaiteids inthuntk</td></tr>
+          <tr><td>1993</td><td>Ninja Baseball Bat Man</td> <td>4</td><td>2</td><td class="sets">nbbatman nbbatmanu leaguemn leaguemna</td></tr>
+          <tr><td>1993</td><td>Superior Soldiers</td>      <td>2</td><td>6</td><td class="sets">ssoldier psoldier</td></tr>
+          <tr><td>1994</td><td>Dream Soccer '94</td>       <td>4</td><td>2</td><td class="sets">dsoccr94j</td></tr>
+          <tr><td>1994</td><td>Gun Force II</td>           <td>2</td><td>2</td><td class="sets">gunforc2 geostorm geostorma</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">40 sets, 13 games. ROMs are found by CRC, so sets from other MAME versions work too. Games are not included.</p>
+  </div>
+</section>
+
+<section id="install">
+  <h2><span>05</span> Install</h2>
+  <div class="content">
+    <ol class="steps">
+      <li>Format a micro SD card as FAT32 and copy everything from the zip to its root.</li>
+      <li>Put your M92 games in the <code>m92pi</code> folder as MAME zips. A clone also needs its parent's zip.</li>
+      <li>Connect a USB pad and the TV, insert the card, switch on.</li>
+    </ol>
+  </div>
+</section>
+
+<section id="controls">
+  <h2><span>06</span> Controls</h2>
+  <div class="content">
+    <dl class="kv">
+      <dt><kbd>A</kbd> <kbd>B</kbd></dt>                           <dd>buttons 1–2</dd>
+      <dt><kbd>C</kbd> <kbd>D</kbd> <kbd>E</kbd> <kbd>F</kbd></dt> <dd>buttons 3–6 <small>(only for Superior / Perfect Soldiers)</small></dd>
+      <dt><kbd>Select</kbd></dt>                                  <dd>coin · hold 1 s for the in-game menu</dd>
+      <dt><kbd>Select</kbd> + <kbd>A</kbd></dt>                   <dd>screenshot</dd>
+      <dt><kbd>Select</kbd> + <kbd>B</kbd></dt>                   <dd>lazy finger (auto fire)</dd>
+      <dt><kbd>Select</kbd> + <kbd>C</kbd></dt>                   <dd>status line</dd>
+      <dt><kbd>Select</kbd> + <kbd>D</kbd></dt>                   <dd>credits</dd>
+    </dl>
+  </div>
+</section>
+
+<section id="support">
+  <h2><span>07</span> Support</h2>
+  <div class="content">
+    <p>m92-pi is <strong>free</strong>. If you enjoy it, you can buy me a <em lang="it">crema caffè</em> :)</p>
+    <a class="download" href="https://paypal.me/alescandy" target="_blank" rel="noopener"><svg aria-hidden="true" width="14" height="12" viewBox="0 0 7 6" shape-rendering="crispEdges"><path d="M1 0h2v1h1V0h2v1h1v2h-1v1h-1v1h-1v1H3V5H2V4H1V3H0V1h1z" fill="#FF4FA8"/></svg>Buy me a coffee</a>
+    <p class="siblings">Siblings: <a href="https://alessioscand.github.io/neo-pi/">neo-pi</a> <small>NEO·GEO</small> // <a href="https://alessioscand.github.io/nes-pi/">nes-pi</a> <small>NES</small></p>
+  </div>
+</section>
+
+<footer>
+  <h2>Credits</h2>
+  <div class="lines">
+    <div>m92-pi is a <span class="human">human-led</span>, vibe-coded experiment by A. Scanderebech · GPLv3 · <a href="https://github.com/alessioscand/m92-pi">Source</a></div>
+    <div>Built on MAME (NEC V33/V35, M92, GA20), ymfm, Circle, miniz and blargg's NTSC filter. Video mixing after the MiSTer Irem M92 core by M. Donlon.</div>
+    <div>Irem is a trademark of its owner.</div>
+  </div>
+</footer>
+
+</div>
+
+<script>
+(() => {
+  const led = document.querySelector('.led'), tested = document.querySelector('.tested'),
+        say = document.querySelector('.mark13'), root = document.documentElement;
+  const LINE = 'M.A.R.K. 13 · No flesh shall be spared';
+  let busy = false;
+  led.addEventListener('click', () => {
+    if (busy) return;
+    busy = true;
+    root.classList.add('hw', 'hw-shake');
+    tested.textContent = 'tested on HARDWARE (1990)';
+    let i = 0;
+    setTimeout(function type() {		// typed, like a terminal
+      say.textContent = LINE.slice(0, ++i);
+      if (i < LINE.length) setTimeout(type, 25);
+    }, 500);
+    setTimeout(() => root.classList.remove('hw-shake'), 1800);
+    setTimeout(() => {
+      root.classList.remove('hw');
+      tested.textContent = 'tested on hardware';
+      say.textContent = '';
+      busy = false;
+    }, 3000);
+  });
+})();
+
+/* Frame animation: one pass over 50 ms (three frames) every 6 s. Each event
+   lights up when the playhead reaches it; each small TV shows the frame
+   before the press until its picture arrives, then the answer (Claude's
+   kick) scanned in from the top. */
+(() => {
+  const PERIOD = 6;                  // seconds per pass
+  const FRAME = 1 / 3;               // one frame, as a fraction of the pass
+  const before = new Image(); before.src = 'img/tv-before.png';
+  const after  = new Image(); after.src  = 'img/tv-after.png';
+
+  const tracks  = [...document.querySelectorAll('.track')];
+  const tvs     = [...document.querySelectorAll('.tv')];
+  const readout = document.querySelector('.readout');
+
+  for (const e of document.querySelectorAll('.event')) {
+    e.style.left = (e.dataset.at * 100) + '%';
+    if (e.dataset.width) e.style.width = (e.dataset.width * 100) + '%';
+  }
+
+  function drawTV(canvas, f) {
+    const g = canvas.getContext('2d');
+    g.fillStyle = '#000';
+    g.fillRect(0, 0, 320, 240);
+    if (!before.complete || !after.complete) return;
+    g.drawImage(before, 0, 0);
+    const rows = Math.max(0, Math.min(240, Math.floor((f - canvas.dataset.shown) / FRAME * 240)));
+    if (rows > 0) {
+      g.drawImage(after, 0, 0, 320, rows, 0, 0, 320, rows);
+      if (rows < 240) {                  // the line being sent
+        g.fillStyle = '#000';
+        g.fillRect(0, rows - 2, 320, 8);
+        g.fillStyle = '#37D6D6';
+        g.fillRect(0, rows, 320, 4);
+      }
+    }
+  }
+
+  function draw(f) {                     // f: 0..1 over 50 ms
+    for (const t of tracks) {
+      t.querySelector('.playhead').style.left = (f * 100) + '%';
+      for (const e of t.querySelectorAll('.event')) e.classList.toggle('on', e.dataset.at <= f);
+    }
+    tvs.forEach(c => drawTV(c, f));
+    const [ours, theirs] = tvs.map(c => +c.dataset.shown);
+    readout.textContent = (f * 50).toFixed(1) + ' ms' +
+      (f >= theirs ? ' · with double buffering the answer starts, '
+                     + ((theirs - ours) * 50).toFixed(1) + ' ms later'
+       : f >= ours ? ' · with beam racing the answer is on its way to the TV' : '');
+  }
+
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    after.onload = before.onload = () => draw(.7);
+    draw(.7);
+    return;
+  }
+  const t0 = performance.now();
+  (function tick(now) {
+    draw(((now - t0) / 1000 % PERIOD) / PERIOD);
+    requestAnimationFrame(tick);
+  })(t0);
+})();
+</script>
+
+</body>
+</html>

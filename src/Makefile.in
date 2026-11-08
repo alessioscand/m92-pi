@@ -1,0 +1,61 @@
+#
+# m92-pi Makefile (generated per target by build.sh)
+#
+CIRCLEHOME = @CIRCLEHOME@
+
+OBJS	= main.o kernel.o console.o games.o hiscore.o settings.o menus.o gameloop.o bench.o \
+	  stats.o racing.o pacing.o frame.o mcline.o \
+	  video.o ui.o fontdata.o fontlist.o ziphelp.o m92_sys.o \
+	  audio.o input.o raster.o race.o profile.o fbmap.o composite.o tvcore.o miniz.o
+
+# The M92 core (C++20 with the standard library) is built apart, with its own
+# flags, into libm92.a: Circle's rules (no standard C++ library) apply to
+# everything else, which sees only the C interface m92_api.h
+LIBS	= libm92.a \
+	  $(CIRCLEHOME)/addon/fatfs/libfatfs.a \
+	  $(CIRCLEHOME)/addon/SDCard/libsdcard.a \
+	  $(CIRCLEHOME)/lib/usb/libusb.a \
+	  $(CIRCLEHOME)/lib/input/libinput.a \
+	  $(CIRCLEHOME)/lib/sound/libsound.a \
+	  $(CIRCLEHOME)/lib/fs/libfs.a \
+	  $(CIRCLEHOME)/lib/libcircle.a
+
+EXTRAINCLUDE = -I @SRC@ -I @COMMON@ -I @CORE@ -isystem @MINIZ@ -isystem @NTSC@
+
+C_STANDARD = -std=gnu11
+OPTIMIZE = -O2
+
+DEFINE += -DNDEBUG -DMINIZ_NO_STDIO -DMINIZ_NO_TIME
+CFLAGS += -fno-math-errno -Wextra -Wshadow -Wno-unused-parameter	# Circle's headers have unused parameters
+
+include $(CIRCLEHOME)/Rules.mk
+
+# ---- the M92 core -----------------------------------------------------------
+# build.sh copies the core's sources here as <name>.core.cpp
+COREOBJ	:= $(patsubst %.core.cpp,%.core.o,$(wildcard *.core.cpp))
+COREOPT	?= -O3
+COREFLAGS = $(ARCH) $(COREOPT) -std=gnu++20 -fno-exceptions -fno-rtti -fno-math-errno \
+	    -ffunction-sections -fdata-sections $(COREWARN) -DNDEBUG -I @CORE@ -isystem @THIRD@/mame -isystem @THIRD@/mame/nec -isystem @THIRD@ -isystem @THIRD@/ymfm
+
+COREWARN = -w				# MAME's and ymfm's sources as they are
+m92%.core.o: COREWARN = -Wall -Wextra -Wshadow	# ours
+
+%.core.o: %.core.cpp
+	@echo "  CPP   $@"
+	@$(CPP) $(COREFLAGS) -c -o $@ $<
+
+libm92.a: $(COREOBJ)
+	@echo "  AR    $@"
+	@rm -f $@
+	@$(AR) cr $@ $(COREOBJ)
+
+# the C++ runtime from the toolchain: standard library and newlib (its system
+# calls are in m92_sys.c); crtbegin/crtend run the core's static constructors
+EXTRALIBS += "$(shell $(CPP) $(ARCH) -print-file-name=libstdc++.a)" \
+	     "$(shell $(CPP) $(ARCH) -print-file-name=libsupc++.a)" \
+	     "$(shell $(CPP) $(ARCH) -print-file-name=libm.a)" \
+	     "$(shell $(CPP) $(ARCH) -print-file-name=libc.a)"
+CRTBEGIN = "$(shell $(CPP) $(ARCH) -print-file-name=crtbegin.o)"
+CRTEND   = "$(shell $(CPP) $(ARCH) -print-file-name=crtend.o)"
+
+-include $(DEPS)

@@ -1,0 +1,11 @@
+harness/obj/
+harness/m92test
+build/
+*.ppm
+*.wav
+toolchain
+circle-rpi4mc
+circle-rpi3mc
+circle-qemumc
+build/
+dist/*.zip

@@ -1,0 +1,608 @@
+// license:BSD-3-Clause
+// copyright-holders:Bryan McPhail, Alex W. Jackson
+// m92-pi: NEC V25/V35 from MAME (src/devices/cpu/nec), cut down to the CPU itself
+#ifndef M92PI_V25_H
+#define M92PI_V25_H
+
+#include "emu.h"
+
+#define NEC_INPUT_LINE_INTP0 10
+#define NEC_INPUT_LINE_INTP1 11
+#define NEC_INPUT_LINE_INTP2 12
+#define NEC_INPUT_LINE_POLL 20
+
+struct devcb_r8  { u8 operator()() const { return 0xff; } };
+struct devcb_w8  { void operator()(u8) const {} };
+struct devcb_r16 { u16 operator()(offs_t) const { return 0xffff; } };
+struct devcb_w16 { void operator()(offs_t, u16) const {} };
+struct devcb_line { void operator()(int) const {} };
+
+class v25_common_device : public cpu_device
+{
+public:
+	// V35 (16-bit bus): pass is_16bit = true, V30 cycle counts
+	v25_common_device(uint32_t clock, bool is_16bit, uint8_t prefetch_size, uint8_t prefetch_cycles, uint32_t chip_type);
+
+	void set_decryption_table(const uint8_t *decryption_table) { m_v25v35_decryptiontable = decryption_table; }
+
+	TIMER_CALLBACK_MEMBER(v25_timer_callback);
+	TIMER_CALLBACK_MEMBER(serial_tx_callback);
+	TIMER_CALLBACK_MEMBER(serial_rx_callback);
+
+	void device_start() override;
+	void device_reset() override;
+	void execute_run() override;
+	void execute_set_input(int inputnum, int state) override;
+	u64 execute_clocks_to_cycles(u64 clocks) const override { return clocks / m_PCK; }
+	u64 execute_cycles_to_clocks(u64 cycles) const override { return cycles * m_PCK; }
+
+	uint32_t pc() const;
+	int m_icount;
+
+private:
+
+	/* internal RAM and register banks */
+	uint16_t m_internal_ram[128];
+
+	uint16_t  m_ip;
+	uint16_t  m_prev_ip;
+	uint16_t  m_rep_ip;
+
+	/* PSW flags */
+	int32_t   m_SignVal;
+	uint32_t  m_AuxVal, m_OverVal, m_ZeroVal, m_CarryVal, m_ParityVal;  /* 0 or non-0 valued flags */
+	uint8_t   m_IBRK, m_F0, m_F1, m_TF, m_IF, m_DF, m_MF;   /* 0 or 1 valued flags */
+	uint8_t   m_RBW, m_RBB;   /* current register bank base, preshifted for word and byte registers */
+
+	/* interrupt related */
+	uint32_t  m_pending_irq;
+	uint32_t  m_unmasked_irq;
+	uint32_t  m_macro_service;
+	uint32_t  m_bankswitch_irq;
+	uint8_t   m_priority_inttu, m_priority_intd, m_priority_intp, m_priority_ints0, m_priority_ints1;
+	uint8_t   m_ems[3];
+	uint8_t   m_srms[2];
+	uint8_t   m_stms[2];
+	uint8_t   m_tmms[3];
+	uint8_t   m_IRQS, m_ISPR;
+	uint32_t  m_nmi_state;
+	uint32_t  m_irq_state;
+	uint32_t  m_poll_state;
+	uint32_t  m_mode_state;
+	uint32_t  m_intp_state[3];
+	uint8_t   m_intm;
+	uint8_t   m_no_interrupt;
+	uint8_t   m_halted;
+	uint32_t  m_rep_params;
+	bool      m_io_retry;
+	bool      m_io_word_pending;
+	uint8_t   m_io_word_latch;
+
+	// timer related
+	uint16_t  m_TM0, m_MD0, m_TM1, m_MD1;
+	uint8_t   m_TMC0, m_TMC1;
+	emu_timer *m_timers[4];
+
+	// serial interface related
+	uint8_t   m_scm[2];
+	uint8_t   m_scc[2];
+	uint8_t   m_brg[2];
+	uint8_t   m_sce[2];
+	uint8_t   m_txb[2];
+	uint8_t   m_rxb[2];
+	uint16_t  m_tx_shift[2];
+	uint8_t   m_tx_count[2];
+	bool      m_tx_pending[2];
+	uint16_t  m_rx_shift[2];
+	uint8_t   m_rx_count[2];
+	bool      m_rx_full[2];
+	uint8_t   m_rxd_state[2];
+	uint8_t   m_cts_state[2];
+	emu_timer *m_tx_timer[2];
+	emu_timer *m_rx_timer[2];
+
+	// DMA related
+	uint8_t   m_dmac[2];
+	uint8_t   m_dmam[2];
+	uint8_t   m_dmarq_state[2];
+	bool      m_dmarq_edge[2];
+	int8_t    m_dma_channel;
+	int8_t    m_last_dma_channel;
+
+	// system control
+	uint8_t   m_RAMEN, m_TB, m_PCK; // PRC register
+	uint8_t   m_RFM;
+	uint16_t  m_WTC;
+	uint32_t  m_IDB;
+
+	address_space *m_program;
+	u8 m_dr8(offs_t a) { return m_program->read_byte(a); }
+	struct data_access
+	{
+		v25_common_device *d;
+		u8 read_byte(offs_t a);
+		u16 read_word(offs_t a);
+		void write_byte(offs_t a, u8 v);
+		void write_word(offs_t a, u16 v);
+	} m_data;
+	u8 sfr_r(offs_t a);
+	void sfr_w(offs_t a, u8 v);
+	address_space *m_io;
+
+	/* callbacks */
+	devcb_r8 m_pt_in;
+	devcb_r8 m_p0_in;
+	devcb_r8 m_p1_in;
+	devcb_r8 m_p2_in;
+
+	devcb_w8 m_p0_out;
+	devcb_w8 m_p1_out;
+	devcb_w8 m_p2_out;
+
+	devcb_r16 m_dma_read[2];
+	devcb_w16 m_dma_write[2];
+
+	devcb_line m_txd_handler[2];
+	devcb_line m_tc_handler[2];
+
+	int32_t   m_cur_cycles;
+	uint8_t   m_prefetch_size;
+	int32_t   m_prefetch_cycles;
+	int32_t   m_prefetch_count;
+	uint8_t   m_prefetch_reset;
+	uint32_t  m_chip_type;
+	bool      m_has_div_quirk;
+
+	uint32_t  m_prefix_base;    /* base address of the latest prefix segment */
+	uint8_t   m_seg_prefix;     /* prefix segment indicator */
+
+	uint32_t m_EA;
+	uint16_t m_EO;
+	uint16_t m_E16;
+
+
+	const uint8_t *m_v25v35_decryptiontable;  // internal decryption table
+
+	typedef void (v25_common_device::*nec_ophandler)();
+	typedef uint32_t (v25_common_device::*nec_eahandler)();
+	static const nec_ophandler s_nec_instruction[256];
+	static const nec_eahandler s_GetEA[192];
+
+	inline void prefetch();
+	void do_prefetch();
+	inline uint8_t fetch();
+	inline uint16_t fetchword();
+	inline uint8_t fetchop();
+	void nec_interrupt(unsigned int_num, int /*INTSOURCES*/ source);
+	void nec_bankswitch(unsigned bank_num);
+	void nec_trap();
+	void external_int();
+	void dma_process();
+
+	uint8_t read_irqcontrol(int /*INTSOURCES*/ source, uint8_t priority);
+	void write_irqcontrol(int /*INTSOURCES*/ source, uint8_t d);
+	uint8_t p0_r();
+	void p0_w(uint8_t d);
+	void pm0_w(uint8_t d);
+	void pmc0_w(uint8_t d);
+	uint8_t p1_r();
+	void p1_w(uint8_t d);
+	void pm1_w(uint8_t d);
+	void pmc1_w(uint8_t d);
+	uint8_t p2_r();
+	void p2_w(uint8_t d);
+	void pm2_w(uint8_t d);
+	void pmc2_w(uint8_t d);
+	uint8_t pt_r();
+	void pmt_w(uint8_t d);
+	uint8_t intm_r();
+	void intm_w(uint8_t d);
+	uint8_t ems_r(offs_t a);
+	void ems_w(offs_t a, uint8_t d);
+	uint8_t exic0_r();
+	void exic0_w(uint8_t d);
+	uint8_t exic1_r();
+	void exic1_w(uint8_t d);
+	uint8_t exic2_r();
+	void exic2_w(uint8_t d);
+	void dmarq_state_w(unsigned n, int state);
+	bool dma_requested(unsigned n) const;
+	attotime serial_bit_time(unsigned n) const;
+	unsigned serial_data_bits(unsigned n) const;
+	void serial_rxd_w(unsigned n, int state);
+	void serial_load_tx(unsigned n);
+	void serial_tx_enabled(unsigned n);
+	uint8_t rxb_r(unsigned n);
+	void txb_w(unsigned n, uint8_t d);
+	void scm_w(unsigned n, uint8_t d);
+	uint8_t rxb0_r();
+	void txb0_w(uint8_t d);
+	uint8_t rxb1_r();
+	void txb1_w(uint8_t d);
+	uint8_t srms0_r();
+	void srms0_w(uint8_t d);
+	uint8_t stms0_r();
+	void stms0_w(uint8_t d);
+	uint8_t scm0_r();
+	void scm0_w(uint8_t d);
+	uint8_t scc0_r();
+	void scc0_w(uint8_t d);
+	uint8_t brg0_r();
+	void brg0_w(uint8_t d);
+	uint8_t sce0_r();
+	uint8_t seic0_r();
+	void seic0_w(uint8_t d);
+	uint8_t sric0_r();
+	void sric0_w(uint8_t d);
+	uint8_t stic0_r();
+	void stic0_w(uint8_t d);
+	uint8_t srms1_r();
+	void srms1_w(uint8_t d);
+	uint8_t stms1_r();
+	void stms1_w(uint8_t d);
+	uint8_t scm1_r();
+	void scm1_w(uint8_t d);
+	uint8_t scc1_r();
+	void scc1_w(uint8_t d);
+	uint8_t brg1_r();
+	void brg1_w(uint8_t d);
+	uint8_t sce1_r();
+	uint8_t seic1_r();
+	void seic1_w(uint8_t d);
+	uint8_t sric1_r();
+	void sric1_w(uint8_t d);
+	uint8_t stic1_r();
+	void stic1_w(uint8_t d);
+	uint16_t tm0_r();
+	void tm0_w(uint16_t d);
+	uint16_t md0_r();
+	void md0_w(uint16_t d);
+	uint16_t tm1_r();
+	void tm1_w(uint16_t d);
+	uint16_t md1_r();
+	void md1_w(uint16_t d);
+	uint8_t tmc0_r();
+	void tmc0_w(uint8_t d);
+	uint8_t tmc1_r();
+	void tmc1_w(uint8_t d);
+	uint8_t tmms_r(offs_t a);
+	void tmms_w(offs_t a, uint8_t d);
+	uint8_t tmic0_r();
+	void tmic0_w(uint8_t d);
+	uint8_t tmic1_r();
+	void tmic1_w(uint8_t d);
+	uint8_t tmic2_r();
+	void tmic2_w(uint8_t d);
+	uint8_t dmac0_r();
+	void dmac0_w(uint8_t d);
+	uint8_t dmam0_r();
+	void dmam0_w(uint8_t d);
+	uint8_t dmac1_r();
+	void dmac1_w(uint8_t d);
+	uint8_t dmam1_r();
+	void dmam1_w(uint8_t d);
+	uint8_t dic0_r();
+	void dic0_w(uint8_t d);
+	uint8_t dic1_r();
+	void dic1_w(uint8_t d);
+	uint8_t rfm_r();
+	void rfm_w(uint8_t d);
+	uint16_t wtc_r();
+	void wtc_w(offs_t a, uint16_t d, uint16_t m);
+	uint8_t flag_r();
+	void flag_w(uint8_t d);
+	uint8_t prc_r();
+	void prc_w(uint8_t d);
+	uint8_t tbic_r();
+	void tbic_w(uint8_t d);
+	uint8_t irqs_r();
+	uint8_t ispr_r();
+	uint8_t idb_r();
+	void idb_w(uint8_t d);
+	uint8_t v25_read_byte(unsigned a);
+	uint16_t v25_read_word(unsigned a);
+	void v25_write_byte(unsigned a, uint8_t d);
+	void v25_write_word(unsigned a, uint16_t d);
+	uint16_t io_read_word(offs_t a);
+	void io_write_word(offs_t a, uint16_t v);
+
+	uint8_t start_rep();
+	void cont_rep();
+	void do_repnc(uint8_t next);
+	void do_repc(uint8_t next);
+	void do_repne(uint8_t next);
+	void do_repe(uint8_t next);
+	bool has_v30_quirks() const { return false; }
+	void decimal_adjust(bool subtract);
+	void ascii_adjust(bool subtract);
+	void packed_decimal(bool subtract, bool store);
+	void bitfield_flags(unsigned position, unsigned length, bool extract);
+	void mul_flags(uint32_t low, bool word);
+	void divu_flags(uint32_t remainder, uint32_t divisor, bool word, bool overflow);
+	void div_flags(int32_t quotient, bool word, bool overflow);
+	void shift_rotate(uint32_t value, uint8_t modrm, uint8_t count, bool word, bool count_one);
+
+	void i_add_br8();
+	void i_add_wr16();
+	void i_add_r8b();
+	void i_add_r16w();
+	void i_add_ald8();
+	void i_add_axd16();
+	void i_push_es();
+	void i_pop_es();
+	void i_or_br8();
+	void i_or_r8b();
+	void i_or_wr16();
+	void i_or_r16w();
+	void i_or_ald8();
+	void i_or_axd16();
+	void i_push_cs();
+	void i_pre_nec();
+	void i_pre_v25();
+	void i_adc_br8();
+	void i_adc_wr16();
+	void i_adc_r8b();
+	void i_adc_r16w();
+	void i_adc_ald8();
+	void i_adc_axd16();
+	void i_push_ss();
+	void i_pop_ss();
+	void i_sbb_br8();
+	void i_sbb_wr16();
+	void i_sbb_r8b();
+	void i_sbb_r16w();
+	void i_sbb_ald8();
+	void i_sbb_axd16();
+	void i_push_ds();
+	void i_pop_ds();
+	void i_and_br8();
+	void i_and_r8b();
+	void i_and_wr16();
+	void i_and_r16w();
+	void i_and_ald8();
+	void i_and_axd16();
+	void i_es();
+	void i_daa();
+	void i_sub_br8();
+	void i_sub_wr16();
+	void i_sub_r8b();
+	void i_sub_r16w();
+	void i_sub_ald8();
+	void i_sub_axd16();
+	void i_cs();
+	void i_das();
+	void i_xor_br8();
+	void i_xor_r8b();
+	void i_xor_wr16();
+	void i_xor_r16w();
+	void i_xor_ald8();
+	void i_xor_axd16();
+	void i_ss();
+	void i_aaa();
+	void i_cmp_br8();
+	void i_cmp_wr16();
+	void i_cmp_r8b();
+	void i_cmp_r16w();
+	void i_cmp_ald8();
+	void i_cmp_axd16();
+	void i_ds();
+	void i_aas();
+	void i_inc_ax();
+	void i_inc_cx();
+	void i_inc_dx();
+	void i_inc_bx();
+	void i_inc_sp();
+	void i_inc_bp();
+	void i_inc_si();
+	void i_inc_di();
+	void i_dec_ax();
+	void i_dec_cx();
+	void i_dec_dx();
+	void i_dec_bx();
+	void i_dec_sp();
+	void i_dec_bp();
+	void i_dec_si();
+	void i_dec_di();
+	void i_push_ax();
+	void i_push_cx();
+	void i_push_dx();
+	void i_push_bx();
+	void i_push_sp();
+	void i_push_bp();
+	void i_push_si();
+	void i_push_di();
+	void i_pop_ax();
+	void i_pop_cx();
+	void i_pop_dx();
+	void i_pop_bx();
+	void i_pop_sp();
+	void i_pop_bp();
+	void i_pop_si();
+	void i_pop_di();
+	void i_pusha();
+	void i_popa();
+	void i_chkind();
+	void i_repnc();
+	void i_repc();
+	void i_push_d16();
+	void i_imul_d16();
+	void i_push_d8();
+	void i_imul_d8();
+	void i_insb();
+	void i_insw();
+	void i_outsb();
+	void i_outsw();
+	void i_jo();
+	void i_jno();
+	void i_jc();
+	void i_jnc();
+	void i_jz();
+	void i_jnz();
+	void i_jce();
+	void i_jnce();
+	void i_js();
+	void i_jns();
+	void i_jp();
+	void i_jnp();
+	void i_jl();
+	void i_jnl();
+	void i_jle();
+	void i_jnle();
+	void i_80pre();
+	void i_82pre();
+	void i_81pre();
+	void i_83pre();
+	void i_test_br8();
+	void i_test_wr16();
+	void i_xchg_br8();
+	void i_xchg_wr16();
+	void i_mov_br8();
+	void i_mov_r8b();
+	void i_mov_wr16();
+	void i_mov_r16w();
+	void i_mov_wsreg();
+	void i_lea();
+	void i_mov_sregw();
+	void i_invalid();
+	void i_popw();
+	void i_nop();
+	void i_xchg_axcx();
+	void i_xchg_axdx();
+	void i_xchg_axbx();
+	void i_xchg_axsp();
+	void i_xchg_axbp();
+	void i_xchg_axsi();
+	void i_xchg_axdi();
+	void i_cbw();
+	void i_cwd();
+	void i_call_far();
+	void i_pushf();
+	void i_popf();
+	void i_sahf();
+	void i_lahf();
+	void i_mov_aldisp();
+	void i_mov_axdisp();
+	void i_mov_dispal();
+	void i_mov_dispax();
+	void i_movsb();
+	void i_movsw();
+	void i_cmpsb();
+	void i_cmpsw();
+	void i_test_ald8();
+	void i_test_axd16();
+	void i_stosb();
+	void i_stosw();
+	void i_lodsb();
+	void i_lodsw();
+	void i_scasb();
+	void i_scasw();
+	void i_mov_ald8();
+	void i_mov_cld8();
+	void i_mov_dld8();
+	void i_mov_bld8();
+	void i_mov_ahd8();
+	void i_mov_chd8();
+	void i_mov_dhd8();
+	void i_mov_bhd8();
+	void i_mov_axd16();
+	void i_mov_cxd16();
+	void i_mov_dxd16();
+	void i_mov_bxd16();
+	void i_mov_spd16();
+	void i_mov_bpd16();
+	void i_mov_sid16();
+	void i_mov_did16();
+	void i_rotshft_bd8();
+	void i_rotshft_wd8();
+	void i_ret_d16();
+	void i_ret();
+	void i_les_dw();
+	void i_lds_dw();
+	void i_mov_bd8();
+	void i_mov_wd16();
+	void i_enter();
+	void i_leave();
+	void i_retf_d16();
+	void i_retf();
+	void i_int3();
+	void i_int();
+	void i_into();
+	void i_iret();
+	void i_rotshft_b();
+	void i_rotshft_w();
+	void i_rotshft_bcl();
+	void i_rotshft_wcl();
+	void i_aam();
+	void i_aad();
+	void i_setalc();
+	void i_trans();
+	void i_fpo();
+	void i_loopne();
+	void i_loope();
+	void i_loop();
+	void i_jcxz();
+	void i_inal();
+	void i_inax();
+	void i_outal();
+	void i_outax();
+	void i_call_d16();
+	void i_jmp_d16();
+	void i_jmp_far();
+	void i_jmp_d8();
+	void i_inaldx();
+	void i_inaxdx();
+	void i_outdxal();
+	void i_outdxax();
+	void i_lock();
+	void i_repne();
+	void i_repe();
+	void i_hlt();
+	void i_cmc();
+	void i_f6pre();
+	void i_f7pre();
+	void i_clc();
+	void i_stc();
+	void i_di();
+	void i_ei();
+	void i_cld();
+	void i_std();
+	void i_fepre();
+	void i_ffpre();
+	void i_wait();
+	void i_brkn();
+	void i_brks();
+
+	uint32_t EA_000();
+	uint32_t EA_001();
+	uint32_t EA_002();
+	uint32_t EA_003();
+	uint32_t EA_004();
+	uint32_t EA_005();
+	uint32_t EA_006();
+	uint32_t EA_007();
+	uint32_t EA_100();
+	uint32_t EA_101();
+	uint32_t EA_102();
+	uint32_t EA_103();
+	uint32_t EA_104();
+	uint32_t EA_105();
+	uint32_t EA_106();
+	uint32_t EA_107();
+	uint32_t EA_200();
+	uint32_t EA_201();
+	uint32_t EA_202();
+	uint32_t EA_203();
+	uint32_t EA_204();
+	uint32_t EA_205();
+	uint32_t EA_206();
+	uint32_t EA_207();
+};
+
+
+class v35_device : public v25_common_device
+{
+public:
+	v35_device(uint32_t clock);
+};
+
+#endif

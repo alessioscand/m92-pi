@@ -1,0 +1,8 @@
+Put here your Irem M92 games as MAME romsets, one .zip each, with the
+names MAME uses (uccops.zip, hook.zip, bmaster.zip, mysticri.zip,
+inthunt.zip ...). A clone also needs its parent's zip (for example
+uccopsj.zip needs uccops.zip). ROMs are found by their CRC, so older
+sets with other file names work too.
+
+m92-pi creates here: saves/ (save states, DIP switches), shots/
+(screenshots), m92pi.cfg, pads.cfg and LOG.TXT.
