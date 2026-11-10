@@ -11,6 +11,9 @@
 #define PROJECT_WIDTH	320
 #define PROJECT_HEIGHT	240
 
+/* Players: one pad each (common/input) */
+#define PROJECT_PLAYERS	4
+
 /* Buttons besides the directions, START and SELECT: A B C D E F */
 #define PROJECT_BUTTONS	6
 
