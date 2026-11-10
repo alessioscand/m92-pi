@@ -71,7 +71,7 @@ public:
 	// changed the controls and has not been taken yet; FALSE if none
 	boolean TakeChange (unsigned *pTicks);
 	// Any player: used by the menus
-	u32 GetAny (void) const	{ return Get (0) | Get (1); }
+	u32 GetAny (void) const	{ return Get (0) | Get (1) | Get (2) | Get (3); }
 
 	unsigned GetPadCount (void) const;
 

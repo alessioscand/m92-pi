@@ -561,7 +561,7 @@ boolean CKernel::PlayMenu (const u32 Pad[4])
 	const unsigned nIds = GmCount;		// RESUME is the B button
 	if (P.nMenuSel >= nIds) P.nMenuSel = 0;
 
-	u32 n = Pad[0] | Pad[1];
+	u32 n = Pad[0] | Pad[1] | Pad[2] | Pad[3];	// whoever opened it can use it
 	u32 nNew = P.nMenuPrev == ~0u ? 0 : (n & ~P.nMenuPrev);
 	P.nMenuPrev = n;
 	unsigned nId = Ids[P.nMenuSel];
