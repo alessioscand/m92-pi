@@ -17,8 +17,3 @@ harness/m92test
 dist/sd/m92pi/*
 !dist/sd/m92pi/PUT_GAMES_HERE.txt
 !dist/sd/m92pi/list.txt
-# Raspberry Pi firmware: copied into dist/sd/ when building (see README.md)
-dist/sd/*.bin
-dist/sd/*.dat
-dist/sd/*.dtb
-dist/sd/LICENCE.broadcom

@@ -34,6 +34,7 @@ third_party/        code by others
   mame/             NEC V33 (main CPU) and V35 (sound CPU) cores, Irem V35 decryption tables
   ymfm/             ymfm, YM2151 only (ymfm_opm)
   miniz/, snes_ntsc/  unmodified
+  rpi-firmware/     Raspberry Pi firmware and Circle's armstub, unmodified (see COMMIT)
 harness/            Linux test harness (m92test)
 test/               hashrun.cpp (regression check), race_sim.cpp (beam racing host test),
                     make_synth.py (a made-up "uccops" set, to test without real ROMs),
@@ -77,8 +78,8 @@ Build host: Linux x86_64. The set-up is the same as neo-pi's (see neo-pi's `BUIL
    then `./makeall` in each copy, and `make` in `addon/SDCard` and `addon/fatfs`.
    In the development machine `toolchain` and the three `circle-*` directories are
    symlinks to neo-pi's (they are in `.gitignore`).
-3. **Raspberry Pi firmware**: the same files as neo-pi (see its `BUILD.md`, step 6),
-   copied into `dist/sd/`; they are not in the repository (`.gitignore`).
+3. **Raspberry Pi firmware**: in `third_party/rpi-firmware`, the same files as neo-pi's;
+   `make_release.sh` puts them on the card.
 4. `./build.sh all` → `build/rpi4/kernel8-rpi4.img` and `build/rpi3/kernel8.img`.
    `./build.sh 4` or `./build.sh 3` for one only. `./build.sh qemu` →
    `build/rpiqemu/kernel8.img` (Pi 3 kernel with `-DPROJECT_FAKEPAD`, not for hardware).
@@ -107,8 +108,8 @@ are (`-w`, headers through `-isystem`). The build must stay free of warnings.
 ```
 
 `make_release.sh` checks that both kernels contain `PROJECT_VERSION` and are
-newer than `src/project.h`, that the firmware and the card files are in
-`dist/sd/`, that `README.txt` starts with `m92-pi <version>`, and leaves out
+newer than `src/project.h`, that the firmware (`third_party/rpi-firmware/`) and the card
+files (`dist/sd/`) are there, that `README.txt` starts with `m92-pi <version>`, and leaves out
 of the zip anything in `dist/sd/m92pi/` except `PUT_GAMES_HERE.txt` and
 `list.txt` (games, saves, `BENCH`, logs, settings).
 GitHub release: tag `v<version>`, asset `m92-pi-<version>-sd.zip`.
