@@ -41,7 +41,7 @@ test/               hashrun.cpp (regression check), race_sim.cpp (beam racing ho
 tools/              gen_m92_tables.py (MAME m92.cpp -> core/m92_games.inc),
                     gen_m92_hiscore.py (MAME hiscore.dat -> core/m92_hiscore.inc)
 patches/            Circle patches (USB polling, XInput pads), same as neo-pi
-dist/sd/            everything that goes on the SD card except the kernels
+dist/sd/            everything that goes on the SD card except the kernels and the Pi firmware
 docs/               the site (GitHub Pages): index.html and img/
 build.sh            builds the kernels
 make_release.sh     builds the SD card zip
@@ -77,7 +77,9 @@ Build host: Linux x86_64. The set-up is the same as neo-pi's (see neo-pi's `BUIL
    then `./makeall` in each copy, and `make` in `addon/SDCard` and `addon/fatfs`.
    In the development machine `toolchain` and the three `circle-*` directories are
    symlinks to neo-pi's (they are in `.gitignore`).
-3. `./build.sh all` → `build/rpi4/kernel8-rpi4.img` and `build/rpi3/kernel8.img`.
+3. **Raspberry Pi firmware**: the same files as neo-pi (see its `BUILD.md`, step 6),
+   copied into `dist/sd/`; they are not in the repository (`.gitignore`).
+4. `./build.sh all` → `build/rpi4/kernel8-rpi4.img` and `build/rpi3/kernel8.img`.
    `./build.sh 4` or `./build.sh 3` for one only. `./build.sh qemu` →
    `build/rpiqemu/kernel8.img` (Pi 3 kernel with `-DPROJECT_FAKEPAD`, not for hardware).
 

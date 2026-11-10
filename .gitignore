@@ -1,11 +1,24 @@
+# build output and toolchains
+build/
+/toolchain
+/circle-*
+*.o
+*.d
+*.a
+*.img
+*.elf
+*.map
 harness/obj/
 harness/m92test
-build/
 *.ppm
 *.wav
-toolchain
-circle-rpi4mc
-circle-rpi3mc
-circle-qemumc
-build/
-dist/*.zip
+# never commit games or user data
+*.zip
+dist/sd/m92pi/*
+!dist/sd/m92pi/PUT_GAMES_HERE.txt
+!dist/sd/m92pi/list.txt
+# Raspberry Pi firmware: copied into dist/sd/ when building (see README.md)
+dist/sd/*.bin
+dist/sd/*.dat
+dist/sd/*.dtb
+dist/sd/LICENCE.broadcom
