@@ -1,10 +1,15 @@
-m92-pi 1.0.0 - Bare-metal Irem M92 emulator for Raspberry Pi 3 and 4
+m92-pi 1.0.1 - Bare-metal Irem M92 emulator for Raspberry Pi 3 and 4
 ============================================================================
 
-WHAT'S NEW IN 1.0.0
+WHAT'S NEW IN 1.0.1
 
-  - The first stable release: the code has been reorganised
-    from top to bottom.
+  - The menus answer every player: player 3 or 4 can open the in-game
+    menu and use it.
+  - The EEPROM of Major Title 2 and The Irem Skins Game is written to
+    the card only when it has changed.
+  - In m92pi/m92pi.cfg, a line starting with # is a comment.
+  - Alignment of the code shared with the other projects (neo-pi,
+    nes-pi).
   - To update a card, copy the new files over the old ones: games,
     saves, hiscores, settings and pads.cfg in m92pi are kept and work
     as before.

@@ -23,6 +23,7 @@ void FrameSync (void);			// wait until cores 1 and 2 have finished the frame
 
 // FALSE: the lines stay in g_VideoBuf (benchmark, MC test); FrameDraw shows them
 void FrameLinesToScreen (boolean bOn);
+boolean FrameTvInit (void);		// COMPOSITE's tables (about 4 MB, built once)
 void FrameSetComposite (boolean bOn);
 boolean FrameIsComposite (void);
 void FrameSetRaced (boolean bOn);	// this frame is beam raced

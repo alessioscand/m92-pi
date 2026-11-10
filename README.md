@@ -293,14 +293,14 @@ files, chosen in `kernel.h`; nothing else in the kernel changes.
 ### 4.2 `common/`
 
 Nothing M92 in it: it takes what it needs from `project.h`. The same files
-are in neo-pi, byte for byte.
+are in neo-pi and nes-pi, byte for byte.
 
 | file | role |
 |---|---|
 | `main.cpp` | Circle's entry point |
 | `smp.h` | work shared between cores: `SharedLoad` / `SharedStore`, `SharedAcquire` / `SharedRelease`, `SignalEvent` / `WaitEvent`, `Ticks` |
 | `race.cpp`, `raster.cpp` | beam racing (HVS line counter measured at start-up); `RACE_ROWS` is the picture's height, from `project.h`. If rows are late in too many frames racing gives up for that game; `Rearm()` tries again at the next game started from the list. `test/race_sim.cpp` tests them on the host |
-| `tvcore.cpp`, `composite.c` | COMPOSITE (blargg's snes_ntsc) on core 2, line by line |
+| `tvcore.cpp`, `composite.c` | COMPOSITE (blargg's snes_ntsc) on core 2, line by line; the look and the line sizes come from the project (`FrameTvInit` in `src/frame.cpp`, `PROJECT_TV_*` in `project.h`) |
 | `fbmap.cpp` | the framebuffer mapped as write-combining memory |
 | `input.cpp` | USB pads and keyboard, one pad per player (`PROJECT_PLAYERS` in `project.h`: 4; pads beyond are not taken), `PROJECT_FAKEPAD` for QEMU. Logical buttons A-F (`BTN_E`/`BTN_F` are bits 10-11, used when `PROJECT_BUTTONS` is 6; `BTN_MENU` bit 12); CONTROLS asks A B C D E F SELECT START, all of them (`pads.cfg` files with `E=-` from earlier versions still load). Without a set-up: LB/RB on known layouts, buttons 5-6 on generic pads, B/N on the keyboard |
 | `audio.cpp` | HDMI audio with drift correction |

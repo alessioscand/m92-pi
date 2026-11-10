@@ -51,7 +51,7 @@ void CKernel::ApplyVideoMode (void)
 	{
 		// the filter's tables, built the first time COMPOSITE is used
 		unsigned t0 = CTimer::GetClockTicks ();
-		if (TvInit ())
+		if (FrameTvInit ())
 		{
 			char Msg[100];
 			unsigned nMs = (CTimer::GetClockTicks () - t0) / 1000;
