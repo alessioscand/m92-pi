@@ -11,6 +11,49 @@
 #include <functional>
 #include <vector>
 
+// ---------------------------------------------------------------- game tables
+// (generated from MAME's drivers by tools/gen_m92_tables.py and gen_m90_tables.py)
+
+struct m92_rom
+{
+	int region;
+	const char *name;
+	uint32_t offset, size;
+	uint8_t load16_byte;            // every other byte, as ROM_LOAD16_BYTE
+	uint32_t crc;
+};
+
+struct m92_dip_setting { uint16_t value; const char *name; };
+
+struct m92_dip
+{
+	uint8_t bank3;                  // 0: DSW port (SW1 low byte, SW2 high byte); 1: SW3 (COINS_DSW3 high byte)
+	uint16_t mask, def;
+	const char *name, *loc;
+	uint16_t first, count;          // settings, in the input set's table
+	uint16_t cond_mask;             // shown only when (DSW & cond_mask) EQUALS (1) / NOTEQUALS (2) cond_value
+	uint8_t cond_op;
+	uint16_t cond_value;
+};
+
+struct m92_inputs
+{
+	const m92_dip *dips;
+	const m92_dip_setting *settings;
+	uint16_t dsw_default;
+	uint8_t dsw3_default;
+	uint8_t players;
+	uint8_t buttons;
+};
+
+// hiscores: MAME's hiscore.dat rows (main CPU program space). The table is in
+// place when every row starts with "first" and ends with "last"; the .hi file is
+// the rows' bytes one after the other, as MAME's hiscore plugin writes it.
+struct m92_hiscore_row { uint32_t addr; uint16_t size; uint8_t first, last; };
+struct m92_hiscore { const char *name; const m92_hiscore_row *rows; int count; };
+
+// ---------------------------------------------------------------- the machine
+
 class irem_machine : public scheduler_base
 {
 public:

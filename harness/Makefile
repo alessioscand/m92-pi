@@ -7,10 +7,11 @@ CXXFLAGS = -std=c++20 $(OPT) -I../core -isystem ../third_party/mame -isystem ../
 WARN = -Wall -Wextra -Wshadow
 CFLAGS = $(OPT) -I../third_party/miniz
 CORE = ../core/irem_machine.cpp ../core/m92.cpp ../core/m92_video.cpp ../core/m92_sound.cpp \
+       ../core/m90.cpp ../core/m90_video.cpp ../core/m90_sound.cpp \
        ../third_party/mame/irem_cpu.cpp ../third_party/mame/nec/nec.cpp \
        ../third_party/mame/nec/v25.cpp ../third_party/mame/nec/v25sfr.cpp \
        ../third_party/ymfm/ymfm_opm.cpp
-OBJ = $(patsubst ../%.cpp,obj/%.o,$(CORE)) obj/main.o obj/miniz.o
+OBJ = $(patsubst ../%.cpp,obj/%.o,$(CORE)) obj/z80.o obj/main.o obj/miniz.o
 
 m92test: $(OBJ)
 	$(CXX) -o $@ $^
@@ -24,6 +25,9 @@ obj/%.o: ../%.cpp
 obj/main.o: main.cpp
 	@mkdir -p obj
 	$(CXX) $(CXXFLAGS) $(WARN) -c $< -o $@
+obj/z80.o: ../third_party/z80/z80.c			# MIT, built as C++ as on the Pi
+	@mkdir -p obj
+	$(CXX) $(CXXFLAGS) -w -x c++ -c $< -o $@
 obj/miniz.o: ../third_party/miniz/miniz.c
 	@mkdir -p obj
 	$(CC) $(CFLAGS) -c $< -o $@

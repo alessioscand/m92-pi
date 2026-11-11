@@ -14,6 +14,9 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "m92.h"
+#include "m90.h"
+#include "m90_video.h"
+#include <memory>
 #include "m92_video.h"
 #include "../test/zipfile.h"
 #include <chrono>
@@ -23,12 +26,12 @@
 #include <string>
 #include <vector>
 
-static void write_ppm(const std::string &path, const std::vector<uint32_t> &fb)
+static void write_ppm(const std::string &path, const std::vector<uint32_t> &fb, int w, int h)
 {
 	FILE *f = fopen(path.c_str(), "wb");
 	if (!f)
 		return;
-	fprintf(f, "P6\n%d %d\n255\n", m92_machine::SCREEN_W, m92_machine::SCREEN_H);
+	fprintf(f, "P6\n%d %d\n255\n", w, h);
 	for (uint32_t p : fb)
 	{
 		fputc(p >> 16, f); fputc(p >> 8, f); fputc(p, f);
@@ -41,7 +44,7 @@ static void write_wav(const std::string &path, const std::vector<int16_t> &pcm)
 	FILE *f = fopen(path.c_str(), "wb");
 	if (!f)
 		return;
-	const uint32_t data = uint32_t(pcm.size() * 2), rate = m92_machine::AUDIO_RATE;
+	const uint32_t data = uint32_t(pcm.size() * 2), rate = irem_machine::AUDIO_RATE;
 	auto put32 = [&](uint32_t v) { fwrite(&v, 4, 1, f); };
 	auto put16 = [&](uint16_t v) { fwrite(&v, 2, 1, f); };
 	fwrite("RIFF", 1, 4, f); put32(36 + data); fwrite("WAVEfmt ", 1, 8, f);
@@ -59,6 +62,8 @@ int main(int argc, char **argv)
 		fprintf(stderr, "games:");
 		for (int i = 0; i < m92_game_count(); i++)
 			fprintf(stderr, " %s", m92_game_at(i)->name);
+		for (int i = 0; i < m90_game_count(); i++)
+			fprintf(stderr, " %s", m90_game_at(i)->name);
 		fprintf(stderr, "\n");
 		return 1;
 	}
@@ -78,29 +83,52 @@ int main(int argc, char **argv)
 		else if (!strcmp(argv[i], "-turbo")) turbo = true;
 	}
 
+	// an M92 set, or an M90 one
+	struct info { const char *name, *parent, *desc, *maker, *year; const m92_inputs *inputs; } gi;
 	const m92_game *game = m92_find_game(name);
-	if (!game)
+	const m90_game *game90 = game ? nullptr : m90_find_game(name);
+	if (game)
+		gi = { game->name, game->parent, game->desc, game->manufacturer, game->year, game->inputs };
+	else if (game90)
+		gi = { game90->name, game90->parent, game90->desc, game90->manufacturer, game90->year, game90->inputs };
+	else
 	{
 		fprintf(stderr, "unknown game %s\n", name);
 		return 1;
 	}
-	zipfile z(dir + "/" + game->name + ".zip");
-	zipfile zp(game->parent[0] ? dir + "/" + game->parent + ".zip" : std::string());
+	zipfile z(dir + "/" + gi.name + ".zip");
+	zipfile zp(gi.parent[0] ? dir + "/" + gi.parent + ".zip" : std::string());
 	auto fetch = [&](const char *rn, uint32_t crc, uint32_t size, uint8_t *dst) {
 		return z.fetch(rn, crc, size, dst) || zp.fetch(rn, crc, size, dst);
 	};
 
-	m92_machine m;
+	std::unique_ptr<irem_machine> mach;
+	m92_machine *m92 = nullptr;
+	m90_machine *m90 = nullptr;
 	std::string missing;
-	if (!m.load(game, fetch, missing))
+	bool loaded;
+	if (game)
 	{
-		fprintf(stderr, "%s: missing ROM %s\n", game->name, missing.c_str());
+		m92 = new m92_machine;
+		mach.reset(m92);
+		loaded = m92->load(game, fetch, missing);
+	}
+	else
+	{
+		m90 = new m90_machine;
+		mach.reset(m90);
+		loaded = m90->load(game90, fetch, missing);
+	}
+	if (!loaded)
+	{
+		fprintf(stderr, "%s: missing ROM %s\n", gi.name, missing.c_str());
 		return 2;
 	}
-	m.set_dsw(game->inputs->dsw_default, game->inputs->dsw3_default);
+	irem_machine &m = *mach;
+	m.set_dsw(gi.inputs->dsw_default ^ (getenv("DX") ? uint16_t(strtoul(getenv("DX"), nullptr, 0)) : 0), gi.inputs->dsw3_default);
 	if (turbo)
 		m.set_cpu_speed(222);
-	printf("%s: %s (%s %s)\n", game->name, game->desc, game->manufacturer, game->year);
+	printf("%s: %s (%s %s)\n", gi.name, gi.desc, gi.maker, gi.year);
 	for (int i = 3; i < argc; i++)
 		if (!strcmp(argv[i], "-hitest"))
 		{
@@ -109,7 +137,7 @@ int main(int argc, char **argv)
 			printf("hiscore bytes: %zu\n", n);
 			if (!n)
 				return 0;
-			const m92_hiscore *h = m92_find_hiscore(game->name);
+			const m92_hiscore *h = game ? m92_find_hiscore(gi.name) : m90_find_hiscore(gi.name);
 			int f = 0;
 			while (f < 3600 && !m.hi_ready()) { m.run_frame(); f++; }
 			std::vector<uint8_t> t(n), back(n);
@@ -139,9 +167,10 @@ int main(int argc, char **argv)
 			return t == back && m.hi_ready() ? 0 : 3;
 		}
 
-	std::vector<uint32_t> fb(m92_machine::SCREEN_W * m92_machine::SCREEN_H, 0);
+	const int W = m.screen_w(), H = m.screen_h();
+	std::vector<uint32_t> fb(size_t(W) * H, 0);
 	m.set_line_callback([&](int y, const uint32_t *px) {
-		memcpy(&fb[size_t(y) * m92_machine::SCREEN_W], px, m92_machine::SCREEN_W * 4);
+		memcpy(&fb[size_t(y) * W], px, size_t(W) * 4);
 	});
 
 	std::vector<int16_t> pcm;
@@ -179,50 +208,58 @@ int main(int argc, char **argv)
 		if (every && (f + 1) % every == 0)
 		{
 			char p[512];
-			snprintf(p, sizeof p, "%s/%s_%05d.ppm", out.c_str(), game->name, f + 1);
-			write_ppm(p, fb);
+			snprintf(p, sizeof p, "%s/%s_%05d.ppm", out.c_str(), gi.name, f + 1);
+			write_ppm(p, fb, W, H);
 		}
-		if (getenv("CTLTRACE") && (f + 1) % 10 == 0)
+		if (m92 && getenv("CTLTRACE") && (f + 1) % 10 == 0)
 			printf("f%d mc %04x %04x %04x %04x vc %04x pf0 %04x %04x pf1 %04x %04x pf2 %04x %04x dma %04x %04x %04x\n", f + 1,
-				m.video()->master_control(0), m.video()->master_control(1), m.video()->master_control(2), m.video()->master_control(3),
-				m.video()->videocontrol(), m.video()->pf_control(0)[0], m.video()->pf_control(0)[2], m.video()->pf_control(1)[0], m.video()->pf_control(1)[2],
-				m.video()->pf_control(2)[0], m.video()->pf_control(2)[2], m.video()->dmacontrol()[0], m.video()->dmacontrol()[1], m.video()->dmacontrol()[2]);
-		if (getenv("PIXDUMP") && f + 1 == atoi(getenv("PIXDUMP")))
+				m92->video()->master_control(0), m92->video()->master_control(1), m92->video()->master_control(2), m92->video()->master_control(3),
+				m92->video()->videocontrol(), m92->video()->pf_control(0)[0], m92->video()->pf_control(0)[2], m92->video()->pf_control(1)[0], m92->video()->pf_control(1)[2],
+				m92->video()->pf_control(2)[0], m92->video()->pf_control(2)[2], m92->video()->dmacontrol()[0], m92->video()->dmacontrol()[1], m92->video()->dmacontrol()[2]);
+		if (m92 && getenv("PIXDUMP") && f + 1 == atoi(getenv("PIXDUMP")))
 		{
 			int px = atoi(getenv("PX")), py = atoi(getenv("PY"));
-			const_cast<m92_video *>(m.video())->debug_pixel(py + 8, px);
+			const_cast<m92_video *>(m92->video())->debug_pixel(py + 8, px);
 			printf("final %06x\n", fb[py * 320 + px]);
 		}
-		if (getenv("SPRDUMP") && f + 1 == atoi(getenv("SPRDUMP")))
+		if (m92 && getenv("SPRDUMP") && f + 1 == atoi(getenv("SPRDUMP")))
 		{
-			const uint16_t *s = m.video()->sprite_buffer();
+			const uint16_t *s = m92->video()->sprite_buffer();
 			for (int l = 0; l < 3; l++)
-				printf("layer %d master %04x ctrl %04x %04x %04x %04x\n", l, m.video()->master_control(l), m.video()->pf_control(l)[0], m.video()->pf_control(l)[1], m.video()->pf_control(l)[2], m.video()->pf_control(l)[3]);
-			printf("master3 %04x\n", m.video()->master_control(3));
+				printf("layer %d master %04x ctrl %04x %04x %04x %04x\n", l, m92->video()->master_control(l), m92->video()->pf_control(l)[0], m92->video()->pf_control(l)[1], m92->video()->pf_control(l)[2], m92->video()->pf_control(l)[3]);
+			printf("master3 %04x\n", m92->video()->master_control(3));
 			{
 				unsigned nz = 0, sum = 0;
-				for (int i = 0; i < 0x8000; i++) { if (m.video()->vram()[i]) nz++; sum += m.video()->vram()[i]; }
+				for (int i = 0; i < 0x8000; i++) { if (m92->video()->vram()[i]) nz++; sum += m92->video()->vram()[i]; }
 				printf("vram nonzero words %u sum %08x\n", nz, sum);
 			}
-			printf("dma %04x %04x %04x vc %04x\n", m.video()->dmacontrol()[0], m.video()->dmacontrol()[1], m.video()->dmacontrol()[2], m.video()->videocontrol());
+			printf("dma %04x %04x %04x vc %04x\n", m92->video()->dmacontrol()[0], m92->video()->dmacontrol()[1], m92->video()->dmacontrol()[2], m92->video()->videocontrol());
 			for (int o = 0; o < 0x400; o += 4)
 				if (s[o] | s[o+1] | s[o+2] | s[o+3])
 					printf("%03x: %04x %04x %04x %04x\n", o, s[o], s[o+1], s[o+2], s[o+3]);
 		}
+		if (m90 && getenv("SPRDUMP") && f + 1 == atoi(getenv("SPRDUMP")))
+		{
+			const uint16_t *v = m90->video()->vram(), *c = m90->video()->ctrl();
+			printf("ctrl %04x %04x %04x %04x %04x %04x %04x %04x\n", c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7]);
+			for (int n = 0; n < 84; n++)
+				if (v[0x7700 + n * 3] | v[0x7701 + n * 3] | v[0x7702 + n * 3])
+					printf("sprite %2d: %04x %04x %04x\n", n, v[0x7700 + n * 3], v[0x7701 + n * 3], v[0x7702 + n * 3]);
+		}
 		if ((f + 1) % 60 == 0)
-			printf("frame %5d  main pc %05x  sound pc %05x  ram %02x%02x %02x\n", f + 1, m.main_pc(), m.sound_pc(), m.main_ram()[1], m.main_ram()[0], m.main_ram()[2]);
+			printf("frame %5d  main pc %05x  sound pc %05x\n", f + 1, m.main_pc(), m.sound_pc());
 	}
 	const double secs = std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
 	printf("%d frames in %.2f s: %.1f fps (%.0f%% of real time)\n", frames, secs, frames / secs, 100.0 * frames / 60.0 / secs);
 
 	char p[512];
-	snprintf(p, sizeof p, "%s/%s_last.ppm", out.c_str(), game->name);
-	write_ppm(p, fb);
+	snprintf(p, sizeof p, "%s/%s_last.ppm", out.c_str(), gi.name);
+	write_ppm(p, fb, W, H);
 	if (wav)
 	{
-		snprintf(p, sizeof p, "%s/%s.wav", out.c_str(), game->name);
+		snprintf(p, sizeof p, "%s/%s.wav", out.c_str(), gi.name);
 		write_wav(p, pcm);
-		printf("sound: %zu frames (%.2f s)\n", pcm.size() / 2, pcm.size() / 2.0 / m92_machine::AUDIO_RATE);
+		printf("sound: %zu frames (%.2f s)\n", pcm.size() / 2, pcm.size() / 2.0 / irem_machine::AUDIO_RATE);
 	}
 
 	if (statetest)

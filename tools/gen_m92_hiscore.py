@@ -3,6 +3,8 @@
 
     python3 tools/gen_m92_hiscore.py <mame>/plugins/hiscore/hiscore.dat \\
             core/m92_games.inc > core/m92_hiscore.inc
+    python3 tools/gen_m92_hiscore.py <mame>/plugins/hiscore/hiscore.dat \\
+            core/m90_games.inc m90 > core/m90_hiscore.inc
 
 Keeps the entries of the sets in m92_games.inc, as MAME reads them: a set
 without its own entry has no hiscore saving (no fall-back to the parent).
@@ -11,6 +13,7 @@ Only main CPU program-space rows are expected; @delay and prefill are refused.
 import re, sys
 
 dat_path, games_path = sys.argv[1], sys.argv[2]
+prefix = sys.argv[3] if len(sys.argv) > 3 else 'm92'
 sets = re.findall(r'\{ "([a-z0-9]+)", "([a-z0-9]*)", "', open(games_path).read())
 names = [s for s, _ in sets]
 
@@ -55,7 +58,7 @@ for n in names:
 			sys.exit(f'{n}: {r}: prefill not supported')
 		addr, size, first, last = (int(x, 16) for x in f[2:6])
 		parsed.append((addr, size, first, last))
-	out.append(f'static const m92_hiscore_row hirows_{n}[] = {{')
+	out.append(f'static const m92_hiscore_row {prefix}_hirows_{n}[] = {{' if prefix != 'm92' else f'static const m92_hiscore_row hirows_{n}[] = {{')
 	for addr, size, first, last in parsed:
 		out.append(f'\t{{ 0x{addr:05x}, 0x{size:03x}, 0x{first:02x}, 0x{last:02x} }},')
 	out.append('\t{ 0, 0, 0, 0 }')
@@ -63,9 +66,9 @@ for n in names:
 	table.append((n, len(parsed)))
 
 out.append('')
-out.append('static const m92_hiscore m92_hiscores[] = {')
+out.append(f'static const m92_hiscore {prefix}_hiscores[] = {{')
 for n, k in table:
-	out.append(f'\t{{ "{n}", hirows_{n}, {k} }},')
+	out.append(f'\t{{ "{n}", {prefix + "_" if prefix != "m92" else ""}hirows_{n}, {k} }},')
 out.append('};')
 print('\n'.join(out))
 missing = [n for n in names if n not in entries]
