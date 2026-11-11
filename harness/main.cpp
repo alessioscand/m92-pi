@@ -153,6 +153,9 @@ int main(int argc, char **argv)
 				for (int k = 0; k < 1800; k++) m.run_frame();
 				m.hi_get(back.data());
 				printf("after 30 s the table is still the one put: %s\n", t == back ? "yes" : "NO");
+				for (size_t k = 0; k < n; k++)
+					if (t[k] != back[k])
+						printf("  byte %zu: put %02x, now %02x\n", k, t[k], back[k]);
 				return t == back ? 0 : 3;
 			}
 			// a synthetic game: no table; put / get through the address space
@@ -246,6 +249,17 @@ int main(int argc, char **argv)
 				if (v[0x7700 + n * 3] | v[0x7701 + n * 3] | v[0x7702 + n * 3])
 					printf("sprite %2d: %04x %04x %04x\n", n, v[0x7700 + n * 3], v[0x7701 + n * 3], v[0x7702 + n * 3]);
 		}
+		if (m90 && getenv("RAMDUMP"))
+		{
+			static FILE *rf = fopen(getenv("RAMDUMP"), "w");
+			fprintf(rf, "%d ", f + 1);
+			const uint8_t *r = m90->main_ram();
+			for (int a = 0; a < 0x4000; a += 2)
+				fprintf(rf, "%02x%02x", r[a + 1], r[a]);
+			fprintf(rf, "\n");
+		}
+		if (getenv("PCTRACE") && f < atoi(getenv("PCTRACE")))
+			printf("F %d %05x %04x\n", f + 1, m.main_pc(), m.sound_pc());
 		if ((f + 1) % 60 == 0)
 			printf("frame %5d  main pc %05x  sound pc %05x\n", f + 1, m.main_pc(), m.sound_pc());
 	}
