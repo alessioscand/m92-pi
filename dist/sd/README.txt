@@ -5,15 +5,12 @@ WHAT'S NEW IN 1.1.0
 
   - Irem M90 games: Bomber Man / Dynablaster / Atomic Punk, Bomber Man
     World / New Atomic Punk, Risky Challenge / Gussun Oyoyo. Up to 4
-    players in the Bomber Man games (Cabinet in DIP SWITCHES). Hasamu,
-    Quiz F1 and Match It II are not supported.
-  - The menus answer every player: player 3 or 4 can open the in-game
-    menu and use it.
+    players in the Bomber Man games (Cabinet in DIP SWITCHES).
+  - Player 3 or 4 can now open the in-game menu and use it.
   - The EEPROM of Major Title 2 and The Irem Skins Game is written to
     the card only when it has changed.
-  - In m92pi/m92pi.cfg, a line starting with # is a comment.
   - Every line of m92pi/list.txt gives the region too.
-  - Alignment of the code shared with the other projects (neo-pi,
+  - Fixed some bugs and aligned code shared with the other projects (neo-pi,
     nes-pi).
   - To update a card, copy the new files over the old ones: games,
     saves, hiscores, settings and pads.cfg in m92pi are kept and work
@@ -104,8 +101,7 @@ OPTIONS MENU (D in the game list, or from the in-game menu)
   m92pi/m92pi.cfg.
 
   CPU SPEED     NORMAL: the original speed. TURBO: 2.2 times faster (on
-                the M92, 20 MHz instead of 9, like Turbo in the MiSTer
-                core): less slowdown where the original hardware slows
+                the M92, 20 MHz instead of 9: less slowdown where the original hardware slows
                 down. Some games may behave differently; NORMAL is
                 the accurate setting. On a Pi 3, TURBO may slow down the
                 heaviest games.
