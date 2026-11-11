@@ -10,8 +10,8 @@ WHAT'S NEW IN 1.1.0
   - The EEPROM of Major Title 2 and The Irem Skins Game is written to
     the card only when it has changed.
   - Every line of m92pi/list.txt gives the region too.
-  - Fixed some bugs and aligned code shared with the other projects (neo-pi,
-    nes-pi).
+  - Fixed some bugs and aligned the code shared with the other projects
+    (neo-pi, nes-pi).
   - To update a card, copy the new files over the old ones: games,
     saves, hiscores, settings and pads.cfg in m92pi are kept and work
     as before.
@@ -101,10 +101,10 @@ OPTIONS MENU (D in the game list, or from the in-game menu)
   m92pi/m92pi.cfg.
 
   CPU SPEED     NORMAL: the original speed. TURBO: 2.2 times faster (on
-                the M92, 20 MHz instead of 9: less slowdown where the original hardware slows
-                down. Some games may behave differently; NORMAL is
-                the accurate setting. On a Pi 3, TURBO may slow down the
-                heaviest games.
+                the M92, 20 MHz instead of 9): less slowdown where the
+                original hardware slows down. Some games may behave
+                differently; NORMAL is the accurate setting. On a Pi 3,
+                TURBO may slow down the heaviest games.
   SCANLINES     OFF / LIGHT / MEDIUM / STRONG / COMPOSITE. COMPOSITE has no
                 scanlines: blargg's NTSC filter gives the look of a
                 composite video connection of the time. Each line is
