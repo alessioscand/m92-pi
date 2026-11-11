@@ -147,7 +147,9 @@ LOW INPUT LAG
 PIXEL PERFECT
 
   Integer scaling only (square pixels, never stretched), with black
-  borders. 1080p: 1280x960 picture. 720p: 960x720 picture.
+  borders. 1080p: 1280x960 picture. 720p: 960x720 picture, which on
+  some monitors fills more of the screen (less black around it); to
+  use it, change hdmi_mode=16 to hdmi_mode=4 in config.txt.
 
 TESTING OPTIONS (in m92pi/m92pi.cfg, one per line)
 
