@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>m92-pi – bare-metal Irem M92 emulator for Raspberry Pi</title>
-<meta name="description" content="m92-pi is a free, bare-metal Irem M92 arcade emulator for Raspberry Pi 3 and 4: no operating system, MAME romsets, beam racing, USB pads polled every 1 ms.">
+<title>m92-pi – bare-metal Irem M90 and M92 emulator for Raspberry Pi</title>
+<meta name="description" content="m92-pi is a free, bare-metal Irem M90 and M92 arcade emulator for Raspberry Pi 3 and 4: no operating system, MAME romsets, beam racing, USB pads polled every 1 ms.">
 <link rel="canonical" href="https://alessioscand.github.io/m92-pi/">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://alessioscand.github.io/m92-pi/">
 <meta property="og:site_name" content="m92-pi">
-<meta property="og:title" content="m92-pi – bare-metal Irem M92 emulator for Raspberry Pi">
-<meta property="og:description" content="The Irem M92 arcade board on a Raspberry Pi, with no operating system.">
+<meta property="og:title" content="m92-pi – bare-metal Irem M90 and M92 emulator for Raspberry Pi">
+<meta property="og:description" content="The Irem M90 and M92 arcade boards on a Raspberry Pi, with no operating system.">
 <meta property="og:image" content="https://alessioscand.github.io/m92-pi/img/game.png">
 <meta property="og:image:width" content="640">
 <meta property="og:image:height" content="480">
@@ -391,6 +391,7 @@ html.hw-shake .sheet { animation: hw-shake 1.8s steps(1, end) both; }
       <dt>Video</dt>      <dd>GA21 sprite DMA · GA22 sprites · GA23 three tile layers</dd>
       <dt>Picture</dt>    <dd>320 × 240 · 60.01 Hz <small>(424 × 262 at a 6.67 MHz pixel clock)</small></dd>
       <dt>Interrupts</dt> <dd>µPD71059 (8259)</dd>
+      <dt>Also</dt>       <dd>V35 · Z80 · YM2151 · DAC · GA25 <small>(Irem M90)</small></dd>
     </dl>
     <h3>RPi</h3>
     <dl class="kv">
@@ -465,8 +466,10 @@ html.hw-shake .sheet { animation: hw-shake 1.8s steps(1, end) both; }
         </thead>
         <tbody>
           <tr><td>1991</td><td>Blade Master</td>           <td>2</td><td>2</td><td class="sets">bmaster crossbld</td></tr>
+          <tr><td>1991</td><td>Bomber Man <span class="tate">(M90)</span></td> <td>4</td><td>2</td><td class="sets">dynablst bombrman atompunk</td></tr>
           <tr><td>1991</td><td>Gunforce</td>               <td>2</td><td>2</td><td class="sets">gunforce gunforcej gunforceu</td></tr>
           <tr><td>1991</td><td>Lethal Thunder <span class="tate">(TATE)</span></td>  <td>2</td><td>2</td><td class="sets">lethalth thndblst</td></tr>
+          <tr><td>1992</td><td>Bomber Man World <span class="tate">(M90)</span></td> <td>4</td><td>2</td><td class="sets">bbmanw bbmanwj bbmanwja newapunk</td></tr>
           <tr><td>1992</td><td>Hook</td>                   <td>4</td><td>2</td><td class="sets">hook hooku hookj</td></tr>
           <tr><td>1992</td><td>Major Title 2</td>          <td>4</td><td>2</td><td class="sets">majtitl2 majtitl2a majtitl2b majtitl2j skingame skingame2</td></tr>
           <tr><td>1992</td><td>Mystic Riders</td>          <td>2</td><td>2</td><td class="sets">mysticri gunhohki mysticrib</td></tr>
@@ -474,13 +477,14 @@ html.hw-shake .sheet { animation: hw-shake 1.8s steps(1, end) both; }
           <tr><td>1992</td><td>Undercover Cops</td>        <td>3</td><td>2</td><td class="sets">uccops uccopsu uccopsj uccopsar uccopsaru</td></tr>
           <tr><td>1993</td><td>In The Hunt</td>            <td>2</td><td>2</td><td class="sets">inthunt inthuntu kaiteids inthuntk</td></tr>
           <tr><td>1993</td><td>Ninja Baseball Bat Man</td> <td>4</td><td>2</td><td class="sets">nbbatman nbbatmanu leaguemn leaguemna</td></tr>
+          <tr><td>1993</td><td>Risky Challenge <span class="tate">(M90)</span></td> <td>2</td><td>2</td><td class="sets">riskchal gussun</td></tr>
           <tr><td>1993</td><td>Superior Soldiers</td>      <td>2</td><td>6</td><td class="sets">ssoldier psoldier</td></tr>
           <tr><td>1994</td><td>Dream Soccer '94</td>       <td>4</td><td>2</td><td class="sets">dsoccr94j</td></tr>
           <tr><td>1994</td><td>Gun Force II</td>           <td>2</td><td>2</td><td class="sets">gunforc2 geostorm geostorma</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="note">40 sets, 13 games. Lethal Thunder is a vertical game (TATE): turn the monitor on its side. ROMs are found by CRC, so sets from other MAME versions work too. Games are not included.</p>
+    <p class="note">49 sets, 16 games: 13 for the M92, 3 for the M90. Lethal Thunder is a vertical game (TATE): turn the monitor on its side. ROMs are matched by CRC: any MAME version works. Games not included.</p>
   </div>
 </section>
 
@@ -489,7 +493,7 @@ html.hw-shake .sheet { animation: hw-shake 1.8s steps(1, end) both; }
   <div class="content">
     <ol class="steps">
       <li>Format a micro SD card as FAT32 and copy everything from the zip to its root.</li>
-      <li>Put your M92 games in the <code>m92pi</code> folder as MAME zips. A clone also needs its parent's zip.</li>
+      <li>Put your games in the <code>m92pi</code> folder as MAME zips. A clone also needs its parent's zip.</li>
       <li>Connect a USB pad and the TV, insert the card, switch on.</li>
     </ol>
   </div>
@@ -523,7 +527,7 @@ html.hw-shake .sheet { animation: hw-shake 1.8s steps(1, end) both; }
   <h2>Credits</h2>
   <div class="lines">
     <div>m92-pi is a <span class="human">human-led</span>, vibe-coded experiment by A. Scanderebech · GPLv3 · <a href="https://github.com/alessioscand/m92-pi">Source</a></div>
-    <div>Built on MAME (NEC V33/V35, M92, GA20), ymfm, Circle, miniz and blargg's NTSC filter. Video mixing after the MiSTer Irem M92 core by M. Donlon.</div>
+    <div>Built on MAME (NEC V33/V35, M92, M90, GA20), ymfm, the Z80 core by N. Allemand, Circle, miniz and blargg's NTSC filter. Video mixing after the MiSTer Irem M92 and M90 cores by M. Donlon.</div>
     <div>Irem is a trademark of its owner.</div>
   </div>
 </footer>
