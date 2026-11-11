@@ -1,9 +1,10 @@
 # m92-pi - Technical notes
 
 Bare-metal Irem M92 emulator for Raspberry Pi 3 and 4 (no operating
-system: Circle, AArch64). The front-end, video output, beam racing,
-COMPOSITE filter, pads and audio come from neo-pi; the M92 core is new
-and reuses MAME's code wherever MAME has it.
+system: Circle, AArch64), with the Irem M90 games too since 1.1.0. The
+front-end, video output, beam racing, COMPOSITE filter, pads and audio
+come from neo-pi; the M92 and M90 cores are new and reuse MAME's code
+wherever MAME has it.
 
 This file is for whoever carries on the work. For players: the site,
 <https://alessioscand.github.io/m92-pi/>, and `dist/sd/README.txt`
@@ -19,28 +20,43 @@ supporting me: [paypal.me/alescandy](https://paypal.me/alescandy)
 ## 1. Layout
 
 ```
-core/               the M92 machine (C++20, no Circle dependency)
+core/               the M92 and M90 machines (C++20, no Circle dependency)
   emu.h             stand-in for MAME's emu.h (types, timers, address spaces, save states)
   endianness.h
-  m92.h/.cpp        the machine: memory maps, I/O, PIC 8259, scheduler, latches, save states
+  irem_machine.h/.cpp  what both machines share: scheduler, inputs, the interface m92_api uses,
+                    the game-table types
+  m92.h/.cpp        the M92: memory maps, I/O, PIC 8259, latches, save states
   m92_video.h/.cpp  GA21/GA22/GA23: tiles, sprites, palette, one line at a time
   m92_sound.h/.cpp  YM2151 + GA20, resampled and mixed to 48 kHz stereo
-  m92_api.h/.cpp    C interface the Circle front-end uses (the front-end has no libstdc++ headers)
   m92_games.inc     GENERATED game tables (ROMs, DIPs, inputs, decryption, map type)
   m92_hiscore.inc   GENERATED hiscore rows (MAME's hiscore.dat)
+  m90.h/.cpp        the M90: memory maps, I/O, sound board (latch, RST buffer, sample DAC), save states
+  m90_video.h/.cpp  GA25: two tile layers and sprites, one line at a time
+  m90_sound.h/.cpp  YM2151 + 8-bit DAC, mixed to 48 kHz
+  m90_games.inc     GENERATED game tables (ROMs, DIPs, inputs, decryption, visible area)
+  m90_hiscore.inc   GENERATED hiscore rows
+  z80_device.h      the Z80 core as a cpu_device the scheduler runs
+  m92_api.h/.cpp    C interface the Circle front-end uses, for both machines (the front-end
+                    has no libstdc++ headers)
 common/             front-end parts with nothing M92 in them (see 4.2)
 src/                the m92-pi front-end (see 4.1)
 third_party/        code by others
   mame/             NEC V33 (main CPU) and V35 (sound CPU) cores, Irem V35 decryption tables
   ymfm/             ymfm, YM2151 only (ymfm_opm)
+  z80/              Z80 core by Nicolas Allemand and contributors (MIT), with the opcode hook
+                    added for s16-pi; built as C++
   miniz/, snes_ntsc/  unmodified
   rpi-firmware/     Raspberry Pi firmware and Circle's armstub, unmodified (see COMMIT)
 harness/            Linux test harness (m92test)
 test/               hashrun.cpp (regression check), race_sim.cpp (beam racing host test),
                     make_synth.py (a made-up "uccops" set, to test without real ROMs),
+                    make_synth90.py (a made-up "dynablst" set for the M90),
                     zipfile.h (ROM zips for the harness and hashrun)
 tools/              gen_m92_tables.py (MAME m92.cpp -> core/m92_games.inc),
-                    gen_m92_hiscore.py (MAME hiscore.dat -> core/m92_hiscore.inc)
+                    gen_m90_tables.py (MAME m90.cpp -> core/m90_games.inc),
+                    irem_ports.py (the INPUT_PORTS parser both use),
+                    gen_m92_hiscore.py (MAME hiscore.dat -> core/m92_hiscore.inc and
+                    core/m90_hiscore.inc)
 patches/            Circle patches (USB polling, XInput pads), same as neo-pi
 dist/sd/            everything that goes on the SD card except the kernels and the Pi firmware
 docs/               the site (GitHub Pages): index.html and img/
@@ -132,6 +148,9 @@ Reference sources used:
   `src/devices/sound/iremga20.cpp`, `src/devices/machine/pic8259.cpp`.
 - MiSTer `Arcade-IremM92` commit `68a4683` (`rtl/*.sv`, especially `palram.sv`,
   `GA21`, `GA22`).
+- For the M90 (see 3.10): MAME master at commit `adb51e2` (10 Nov 2026),
+  `src/mame/irem/m90*.cpp`, `m72_a.cpp`; MiSTer `Arcade-IremM90` commit
+  `185179f` (`rtl/m90.sv`, `ga25*.sv`, `sound.sv`).
 
 ### 3.2 `emu.h`
 
@@ -156,6 +175,10 @@ Reference sources used:
   Turbo roughly doubles the emulation time, so it is best on Pi 4.
 
 ### 3.4 Scheduler and timing
+
+The scheduler lives in `irem_machine` and serves both machines; each
+machine only says whether a CPU is held in reset (`cpu_held`) and when its
+speed changes (`cpu_rate`, for the V35's PCK).
 
 - Time in picoseconds. Pixel clock 26.666666 MHz / 4; 424 pixel clocks per line,
   262 lines per frame → **60.01 Hz** (`FRAME_HZ`).
@@ -252,12 +275,53 @@ sets have an entry (the others: see 4). Never edit `m92_hiscore.inc` by hand.
 Everything the front-end uses: game list and DIP descriptions, `m92_load()`
 with a ROM fetch callback (by CRC, then by name; game zip then parent zip),
 `m92_run_frame()`, inputs, audio, line callback / line sink / video sync /
-line hook, save states, EEPROM, PCs for diagnostics. Inputs are active high;
+line hook, save states, EEPROM, PCs for diagnostics, each game's picture size
+(`m92_game_width()`, `m92_game_height()`). Inputs are active high;
 players 3 and 4 use bit 4 = start, bit 5 = coin. Every M92 game uses 2 buttons
 (`m92_game_buttons()` = 2), except Superior Soldiers / Perfect Soldiers (6):
 three punches on the panel (bits 7-5) and three kicks on MAME's extra connector,
 read as the high byte of the players 3-4 port (player 1 bits 1-3, player 2
 bits 5-7), so the front-end writes them as player 4's byte.
+
+### 3.10 The M90 (`m90.cpp`, `m90_video.cpp`, `m90_sound.cpp`)
+
+Bomber Man / Dynablaster / Atomic Punk, Bomber Man World / New Atomic Punk,
+Risky Challenge / Gussun Oyoyo: 9 sets, 320x240, the same timing as the M92
+(424 x 262 at 6.67 MHz, 60.01 Hz), so the front-end needs nothing new. The
+machine is a second `irem_machine`; `m92_api` lists the M92 sets first, then
+the M90 ones.
+
+- **Main CPU**: NEC V35 at 16 MHz (divided by its PCK), opcodes decrypted with
+  the game's Irem table (the same tables as the M92 sound CPUs). Vertical blank
+  on INTP0, from the line after the picture to its first line. CPU SPEED
+  scales it as on the M92.
+- **Sound board**: Z80 at 3.58 MHz, YM2151, 8-bit DAC. Interrupts through the
+  RST buffer (IM 0): RST 18h for the sound latch, RST 28h for the YM2151,
+  RST 08h for both; the latch is acknowledged by a write, not by reading it.
+  M72-style boards play the samples in the Z80's NMI; the M99 board (Bomber
+  Man World) plays them by itself up to a 00 byte, started by a write.
+- **Video (GA25)**: two 64x64 (or 128x64, "wide") tile layers with row
+  scroll and row select, 84 sprites (a later entry over an earlier one), one
+  line at a time as on the M92 (line sink and multicore unchanged).
+- **Where the MiSTer core is followed, not MAME** (it was made on a real
+  board): which pens of a priority tile cover the sprites (pens 8-15 with
+  attribute bit 4, every pen but 0 with bit 5); which sprite colours go over
+  priority tiles (video control bits 0-1); the samples clocked at 32 MHz /
+  4096 = 7812.5 Hz (MAME: 7680 Hz); only the YM2151's left output wired; the
+  samples through a 3.5 kHz low-pass filter and -10 dB; the picture switched
+  off shows colour 0. If something looks or sounds wrong against MAME, these
+  are the first places to look.
+- **Not supported**: Hasamu, Quiz F1 and Match It II / Shisensho II (384
+  pixels wide, Quiz F1 and Match It II 256 lines high): the core handles them
+  (visible area per game, Quiz F1's ROM bank) but the front-end is built for
+  320x240, so `games.cpp` leaves them out. The bootlegs (other video and sound
+  hardware) are not in the tables.
+- Game tables: `python3 tools/gen_m90_tables.py <mame>/src/mame/irem >
+  core/m90_games.inc` (shorter DIP names where the panel needs them, in
+  `irem_ports.nice()`). Hiscores: `gen_m92_hiscore.py ... core/m90_games.inc
+  m90 > core/m90_hiscore.inc` (8 of the 9 sets have an entry; not `newapunk`).
+- Save states: magic `M90 `, version 1; the Z80's callbacks are put back
+  after a load.
 
 ## 4. The front-end
 
@@ -406,6 +470,23 @@ Results so far (Undercover Cops, `uccops`):
 - at boot MAME shows a palette test pattern that m92-pi does not (a
   behaviour of the video control register MAME emulates and m92-pi does not).
 
+M90 (`dynablst`, `bbmanw`, `riskchal`, a snapshot every 50 frames for 29 s,
+compared with an offset of up to 6 frames):
+- pixel-identical while the games run alike: 25 of 34 (`dynablst`), 28 of 34
+  (`bbmanw`); the work RAM of `riskchal` is identical to MAME's frame by
+  frame up to frame 196;
+- then the attract demos drift apart (the games' random numbers depend on
+  timing, which follows the real board's 262 lines, not MAME's screen), so
+  later frames differ by game state, not by drawing;
+- MAME shows garbage before the games set the video up, m92-pi black;
+- the flying logo of Bomber Man World (row scroll) is drawn whole by m92-pi
+  and as broken lines by MAME;
+- per-second audio RMS follows MAME's (m92-pi about 2.5 times louder, as
+  loud as the M92 games);
+- save state test identical, also with TURBO; the hiscore tables are found
+  (`dynablst` and `riskchal` change one byte inside MAME's range by
+  themselves).
+
 ### 5.3 QEMU
 
 ```
@@ -446,6 +527,8 @@ Bat Man, CPU NORMAL, SCANLINES): the same `Check` lines (`9152BADB` /
 ## 6. Known gaps / to do
 
 - Flip screen not emulated (the DIP is hidden in the menu).
+- M90: Hasamu, Quiz F1, Match It II (see 3.10). The M90 choices taken from
+  the MiSTer core still to be checked on more scenes.
 - The palette test pattern MAME shows at boot (see 5.2).
 - Major Title 2 EEPROM saving not tested.
 - Composite video for CRT TVs (all three projects): NTSC 240p from the
@@ -473,10 +556,12 @@ Bat Man, CPU NORMAL, SCANLINES): the same `Check` lines (`9152BADB` /
 - **Alessio Scanderebech**: idea, direction, design, testing on hardware.
 - **Claude** (Anthropic): code and documentation, written with Alessio.
 - **MAME** authors, among them Bryan McPhail, Alex W. Jackson, Acho A. Tang,
-  R. Belmont and Valley Bell: NEC V33/V35 cores, M92 driver, GA20, Irem
+  R. Belmont and Valley Bell: NEC V33/V35 cores, M92 and M90 drivers, GA20, Irem
   decryption tables, 8259 (BSD 3-Clause).
-- **Martin Donlon** (wickerwaka): the MiSTer Irem M92 core, the reference for
-  sprite DMA and video mixing (no code included).
+- **Martin Donlon** (wickerwaka): the MiSTer Irem M92 and M90 cores, the
+  reference for sprite DMA, video mixing and the M90's sound board (no code
+  included).
+- **Nicolas Allemand**, Rupert Carmichael and rofl0r: the Z80 core (MIT).
 - **Aaron Giles** and Rupert Carmichael: ymfm (BSD 3-Clause).
 - **Rene Stange**: Circle (GPLv3).
 - **Shay Green** (blargg): snes_ntsc, the COMPOSITE filter (LGPL 2.1+).
