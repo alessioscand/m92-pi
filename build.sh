@@ -21,7 +21,7 @@ for P in $TARGETS; do
 	cp "$ROOT"/third_party/miniz/miniz.c "$B"/
 	cp "$ROOT"/third_party/snes_ntsc/snes_ntsc.c "$B"/ 2>/dev/null || true
 	# the core, flattened: m92.cpp -> m92.core.cpp, nec/v25.cpp -> v25.core.cpp ...
-	for f in core/m92.cpp core/m92_video.cpp core/m92_sound.cpp core/m92_api.cpp \
+	for f in core/irem_machine.cpp core/m92.cpp core/m92_video.cpp core/m92_sound.cpp core/m92_api.cpp \
 		 third_party/mame/irem_cpu.cpp third_party/mame/nec/nec.cpp \
 		 third_party/mame/nec/v25.cpp third_party/mame/nec/v25sfr.cpp \
 		 third_party/ymfm/ymfm_opm.cpp; do

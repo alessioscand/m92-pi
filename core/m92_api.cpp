@@ -6,7 +6,7 @@
 #include <cstring>
 #include <new>
 
-static m92_machine *s_m;
+static irem_machine *s_m;
 
 int m92_num_games(void) { return m92_game_count(); }
 
@@ -80,11 +80,12 @@ int m92_load(int n, TM92Fetch *fetch, void *ctx, char *missing, size_t nmissing)
 	m92_unload();
 	if (!G(n))
 		return 0;
-	s_m = new (std::nothrow) m92_machine;
-	if (!s_m)
+	m92_machine *m = new (std::nothrow) m92_machine;
+	if (!m)
 		return 0;
+	s_m = m;
 	std::string miss;
-	const bool ok = s_m->load(G(n), [fetch, ctx](const char *name, uint32_t crc, uint32_t size, uint8_t *dst) {
+	const bool ok = m->load(G(n), [fetch, ctx](const char *name, uint32_t crc, uint32_t size, uint8_t *dst) {
 		return fetch(ctx, name, crc, size, dst) != 0;
 	}, miss);
 	if (!ok)
@@ -139,10 +140,12 @@ void m92_set_line_sink(TM92LineSink *sink, void *ctx)
 {
 	if (!s_m)
 		return;
-	static_assert(sizeof(TM92LineRegs) == sizeof(m92_machine::line_regs), "line regs");
+	static_assert(sizeof(TM92LineRegs) >= irem_machine::LINE_REGS_BYTES, "line regs");
 	if (sink)
-		s_m->set_line_sink([sink, ctx](int y, const m92_machine::line_regs &r) {
-			sink(ctx, y, reinterpret_cast<const TM92LineRegs *>(&r));
+		s_m->set_line_sink([sink, ctx](int y, const void *r) {
+			TM92LineRegs regs;
+			memcpy(&regs, r, irem_machine::LINE_REGS_BYTES);
+			sink(ctx, y, &regs);
 		});
 	else
 		s_m->set_line_sink(nullptr);
@@ -153,7 +156,7 @@ void m92_set_video_sync(void (*fn)(void *), void *ctx) { if (s_m) s_m->set_video
 void m92_render_line(const TM92LineRegs *regs, int y, uint32_t *out)
 {
 	if (s_m)
-		s_m->render_line(*reinterpret_cast<const m92_machine::line_regs *>(regs), y, out);
+		s_m->render_line(regs, y, out);
 }
 
 size_t m92_state_size(void) { return s_m ? s_m->state_size() : 0; }

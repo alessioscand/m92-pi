@@ -236,8 +236,6 @@ m92_machine::m92_machine()
 
 m92_machine::~m92_machine()
 {
-	for (emu_timer *t : timers)
-		delete t;
 }
 
 // ---------------------------------------------------------------- loading
@@ -275,9 +273,7 @@ bool m92_machine::load(const m92_game *game, const rom_fetch &fetch, std::string
 			m_region[M92_REG_GFX2].data(), m_region[M92_REG_GFX2].size(), game->gfx_psoldier);
 
 	// devices; everything registered with m_save in a fixed order for save states
-	for (emu_timer *t : timers)
-		delete t;
-	timers.clear();
+	delete_timers();
 	m_save.items.clear();
 
 	m_maincpu = std::make_unique<nec_common_device>(MAIN_CLOCK);
@@ -307,25 +303,10 @@ bool m92_machine::load(const m92_game *game, const rom_fetch &fetch, std::string
 	m_soundcpu->device_start();
 	m_slot[0].cpu = m_maincpu.get();
 	m_slot[1].cpu = m_soundcpu.get();
-	for (auto &s : m_slot)
-	{
-		m_save.add(&s.cpu->m_local_time, sizeof(s.cpu->m_local_time));
-		m_save.add(&s.ps_frac, sizeof(s.ps_frac));
-	}
+	irem_machine::register_save(m_save);
 
-	m_scan_timer = new emu_timer;
-	m_scan_timer->sched = this;
-	m_scan_timer->cb = [this](s32 p) { scanline(p); };
-	m_dma_timer = new emu_timer;
-	m_dma_timer->sched = this;
-	m_dma_timer->cb = [this](s32 p) { dma_done(p); };
-	for (emu_timer *t : { m_scan_timer, m_dma_timer })
-	{
-		timers.push_back(t);
-		m_save.add(&t->expire, sizeof(t->expire));
-		m_save.add(&t->period, sizeof(t->period));
-		m_save.add(&t->param, sizeof(t->param));
-	}
+	m_scan_timer = new_timer(m_save, [this](s32 p) { scanline(p); });
+	m_dma_timer = new_timer(m_save, [this](s32 p) { dma_done(p); });
 
 	m_sound->start(m_region[M92_REG_IREM].data(), m_region[M92_REG_IREM].size(), m_save);
 	m_video->register_save(m_save);
@@ -394,14 +375,7 @@ void m92_machine::map_main()
 
 void m92_machine::reset()
 {
-	m_now = attotime::zero;
-	for (auto &s : m_slot)
-	{
-		s.cpu->m_local_time = attotime::zero;
-		s.ps_frac = 0;
-	}
-	for (emu_timer *t : timers)
-		t->reset();
+	reset_scheduler();
 
 	memset(m_ram, 0, sizeof(m_ram));
 	memset(m_sound_ram, 0, sizeof(m_sound_ram));
@@ -413,7 +387,6 @@ void m92_machine::reset()
 	m_raster_irq_position = -1;
 	m_dma_busy = 1;
 	m_frame = 0;
-	m_deferred.clear();
 
 	m_pic.reset();
 	m_video->reset();
@@ -440,142 +413,15 @@ void m92_machine::update_cpu_rates()
 	m_slot[1].cycles_per_sec = m_soundcpu->execute_clocks_to_cycles(SOUND_CLOCK);
 }
 
+// the V35's clock divider (PCK) is set by its program
+void m92_machine::cpu_rate(int slot)
+{
+	if (slot == 1)
+		m_slot[1].cycles_per_sec = m_soundcpu->execute_clocks_to_cycles(SOUND_CLOCK);
+}
+
 uint32_t m92_machine::main_pc() const { return m_maincpu->pc(); }
 uint32_t m92_machine::sound_pc() const { return m_soundcpu->pc(); }
-
-// ---------------------------------------------------------------- scheduler
-
-attotime m92_machine::current_time() const
-{
-	if (!m_running)
-		return m_now;
-	const cpu_slot &s = *m_running;
-	const s64 done = s.requested - *s.cpu->m_icountptr;
-	const unsigned __int128 t = (unsigned __int128)(done > 0 ? done : 0) * 1000000000000ULL + u64(s.ps_frac);
-	return attotime(s.cpu->m_local_time.ps + s64(t / s.cycles_per_sec));
-}
-
-// cycles from the CPU's own time to "until", rounded up
-static int cycles_until(const attotime &local, s64 frac, u64 cps, const attotime &until)
-{
-	if (until.ps <= local.ps)
-		return 0;
-	const unsigned __int128 need = (unsigned __int128)(until.ps - local.ps) * cps;
-	const unsigned __int128 have = u64(frac);
-	if (need <= have)
-		return 0;
-	const unsigned __int128 c = (need - have + 999999999999ULL) / 1000000000000ULL;
-	return c > 0x7fffffff ? 0x7fffffff : int(c);
-}
-
-void m92_machine::timer_changed(emu_timer *t)
-{
-	if (!m_running || t->expire.is_never() || !(t->expire < m_slice_end))
-		return;
-	// a timer now falls inside the slice being run: stop the CPU there
-	m_slice_end = t->expire;
-	cpu_slot &s = *m_running;
-	int &ic = *s.cpu->m_icountptr;
-	const int done = s.requested - ic;
-	const int need = cycles_until(s.cpu->m_local_time, s.ps_frac, s.cycles_per_sec, t->expire);
-	if (need < s.requested)
-	{
-		ic = need > done ? need - done : 0;
-		s.requested = done + ic;
-	}
-}
-
-void m92_machine::defer(std::function<void()> fn)
-{
-	m_deferred.push_back(std::move(fn));
-	if (m_running)
-	{
-		// end the running CPU's slice after this instruction: the other CPU catches up to
-		// here before the action happens, as MAME's synchronize()
-		cpu_slot &s = *m_running;
-		int &ic = *s.cpu->m_icountptr;
-		const int done = s.requested - ic;
-		ic = 0;
-		s.requested = done;
-		m_slice_end = current_time();
-	}
-}
-
-void m92_machine::run_cpu(cpu_slot &s, attotime until)
-{
-	cpu_device *c = s.cpu;
-	if (!(c->m_local_time < until))
-		return;
-	if (&s == &m_slot[1] && m_sound_in_reset)
-	{
-		c->m_local_time = until;
-		s.ps_frac = 0;
-		return;
-	}
-	if (&s == &m_slot[1])
-		s.cycles_per_sec = m_soundcpu->execute_clocks_to_cycles(SOUND_CLOCK);
-	const int cycles = cycles_until(c->m_local_time, s.ps_frac, s.cycles_per_sec, until);
-	if (cycles <= 0)
-		return;
-	s.requested = cycles;
-	*c->m_icountptr = cycles;
-	m_running = &s;
-	c->execute_run();
-	m_running = nullptr;
-	const s64 done = s.requested - *c->m_icountptr;
-	const unsigned __int128 t = (unsigned __int128)(done > 0 ? done : 0) * 1000000000000ULL + u64(s.ps_frac);
-	c->m_local_time.ps += s64(t / s.cycles_per_sec);
-	s.ps_frac = s64(t % s.cycles_per_sec);
-}
-
-void m92_machine::run_until(attotime target)
-{
-	while (m_now < target || m_now.ps == target.ps)
-	{
-		// fire what is due
-		bool fired = true;
-		while (fired)
-		{
-			fired = false;
-			emu_timer *first = nullptr;
-			for (emu_timer *t : timers)
-				if (!t->expire.is_never() && t->expire <= m_now && (!first || t->expire < first->expire))
-					first = t;
-			if (first)
-			{
-				const s32 p = first->param;
-				if (!first->period.is_never())
-					first->expire = first->expire + first->period;
-				else
-					first->expire = attotime::never;
-				first->cb(p);
-				fired = true;
-			}
-		}
-		if (!(m_now < target))
-			break;
-
-		attotime next = target;
-		for (emu_timer *t : timers)
-			if (!t->expire.is_never() && t->expire < next)
-				next = t->expire;
-		m_slice_end = next;
-
-		run_cpu(m_slot[0], m_slice_end);
-		run_cpu(m_slot[1], m_slice_end);
-		// a CPU may have stopped early (deferred action): the other one has been run to the
-		// same point since m_slice_end only moves backwards
-		m_now = m_slice_end;
-
-		if (!m_deferred.empty())
-		{
-			std::vector<std::function<void()>> d;
-			d.swap(m_deferred);
-			for (auto &fn : d)
-				fn();
-		}
-	}
-}
 
 void m92_machine::run_frame()
 {
@@ -604,7 +450,7 @@ void m92_machine::scanline(s32)
 		m92_video::line_regs r;
 		m_video->capture(r);
 		if (m_line_sink)
-			m_line_sink(line - m92_video::VIS_Y0, r);
+			m_line_sink(line - m92_video::VIS_Y0, &r);
 		else
 		{
 			u32 buf[m92_video::VIS_W];
@@ -624,9 +470,9 @@ void m92_machine::dma_done(s32)
 	m_pic.set_irq_line(1, 1);
 }
 
-void m92_machine::render_line(const line_regs &regs, int y, uint32_t *out)
+void m92_machine::render_line(const void *regs, int y, uint32_t *out)
 {
-	m_video->render_line(regs, y + m92_video::VIS_Y0, out);
+	m_video->render_line(*static_cast<const line_regs *>(regs), y + m92_video::VIS_Y0, out);
 }
 
 void m92_machine::set_video_sync(void (*fn)(void *), void *ctx)

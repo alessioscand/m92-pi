@@ -38,7 +38,7 @@ COREFLAGS = $(ARCH) $(COREOPT) -std=gnu++20 -fno-exceptions -fno-rtti -fno-math-
 	    -ffunction-sections -fdata-sections $(COREWARN) -DNDEBUG -I @CORE@ -isystem @THIRD@/mame -isystem @THIRD@/mame/nec -isystem @THIRD@ -isystem @THIRD@/ymfm
 
 COREWARN = -w				# MAME's and ymfm's sources as they are
-m92%.core.o: COREWARN = -Wall -Wextra -Wshadow	# ours
+m92%.core.o irem%.core.o m90%.core.o: COREWARN = -Wall -Wextra -Wshadow	# ours
 
 %.core.o: %.core.cpp
 	@echo "  CPP   $@"

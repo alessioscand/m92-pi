@@ -10,6 +10,7 @@
 #define M92PI_M92_H
 
 #include "emu.h"
+#include "irem_machine.h"
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -81,7 +82,7 @@ class v35_device;
 class m92_sound;
 class m92_video;
 
-class m92_machine : public scheduler_base
+class m92_machine : public irem_machine
 {
 public:
 	// fetch one ROM file: from the game's zip, then its parent's. Fill dst with exactly size bytes.
@@ -89,7 +90,6 @@ public:
 
 	static constexpr int SCREEN_W = 320;
 	static constexpr int SCREEN_H = 240;
-	static constexpr int AUDIO_RATE = 48000;
 
 	m92_machine();
 	~m92_machine();
@@ -97,70 +97,36 @@ public:
 	// load a game; on failure returns false and the name of the missing ROM in missing
 	bool load(const m92_game *game, const rom_fetch &fetch, std::string &missing);
 	const m92_game *game() const { return m_game; }
-	void reset();
 
-	// one frame: 262 lines from the line after the visible area (vertical blank first).
-	// Each of the 240 visible lines (y = 0..239) is drawn as it starts: by default here,
-	// and handed to the line callback as 320 pixels 0x00RRGGBB
-	typedef std::function<void(int y, const uint32_t *rgb)> line_cb;
-	void set_line_callback(line_cb cb) { m_line_cb = std::move(cb); }
-	// multicore: with a sink set, lines are not drawn here; the sink gets the registers the
-	// line must be drawn with and draws it (on another core) with render_line(). The sync
-	// function is called before VRAM, palette or sprites change: it must wait until every
-	// line handed to the sink has been drawn.
-	struct line_regs { uint16_t pf_control[3][4]; uint16_t master_control[4]; uint16_t videocontrol; };
-	typedef std::function<void(int y, const line_regs &regs)> line_sink;
-	void set_line_sink(line_sink sink) { m_line_sink = std::move(sink); }
-	void set_video_sync(void (*fn)(void *), void *ctx);
-	void render_line(const line_regs &regs, int y, uint32_t *out);
-	// called at the start of each of the 262 lines (0 = first line of the frame counter,
-	// 8 = first visible line), before it is drawn: beam racing
-	typedef std::function<void(int line)> line_hook;
-	void set_line_hook(line_hook hook) { m_line_hook = std::move(hook); }
-	static constexpr int FIRST_VISIBLE_LINE = 8;
-	static constexpr int VBLANK_LINE = 248;
-	static constexpr int TOTAL_LINES = 262;
-	static constexpr double FRAME_HZ = 26666666.0 / 4 / 424 / 262;
-	void run_frame();
-
-	// inputs: one byte per player, active high:
-	// bit 0 right, 1 left, 2 down, 3 up, 4 button 4, 5 button 3, 6 button 2, 7 button 1
-	void set_player(int n, uint8_t bits) { m_player[n & 3] = bits; }
-	// bit 0 start1, 1 start2, 2 coin1, 3 coin2, 4 service, 5 test, 6 start3/coin3 ... (active high)
-	void set_system(uint8_t bits) { m_system = bits; }
-	uint16_t dsw() const { return m_dsw; }
-	uint8_t dsw3() const { return m_dsw3; }
-	void set_dsw(uint16_t dsw, uint8_t dsw3) { m_dsw = dsw; m_dsw3 = dsw3; }
-
+	// irem_machine
+	void reset() override;
+	void run_frame() override;
+	int screen_w() const override { return SCREEN_W; }
+	int screen_h() const override { return SCREEN_H; }
 	// main CPU speed: 100 = original 9 MHz; the MiSTer core's Turbo runs it at 20 MHz (222)
-	void set_cpu_speed(int percent);
+	void set_cpu_speed(int percent) override;
+	int audio_read(int16_t *dst, int max_frames) override;
+	void set_video_sync(void (*fn)(void *), void *ctx) override;
+	void render_line(const void *regs, int y, uint32_t *out) override;
+	size_t state_size() const override;
+	bool save_state(std::vector<uint8_t> &out) override;
+	bool load_state(const std::vector<uint8_t> &in) override;
+	uint8_t *eeprom(size_t &size) override { size = sizeof(m_eeprom); return m_game && m_game->eeprom ? m_eeprom : nullptr; }
+	size_t hi_size() const override;
+	bool hi_ready() override;
+	void hi_get(uint8_t *dst) override;
+	void hi_put(const uint8_t *src) override;
+	uint32_t main_pc() const override;
+	uint32_t sound_pc() const override;
 
-	// sound: 48 kHz stereo pairs made during the frames run so far
-	int audio_available() const;
-	int audio_read(int16_t *dst, int max_frames);
-
-	// save states (whole machine, about 400 KB)
-	size_t state_size() const;
-	bool save_state(std::vector<uint8_t> &out);
-	bool load_state(const std::vector<uint8_t> &in);
+	// the registers a line is drawn with (see set_line_sink)
+	struct line_regs { uint16_t pf_control[3][4]; uint16_t master_control[4]; uint16_t videocontrol; };
+	static_assert(sizeof(line_regs) <= LINE_REGS_BYTES, "line regs");
 
 	// for the harness and diagnostics
-	uint64_t frame_count() const { return m_frame; }
-	uint32_t main_pc() const;
-	uint32_t sound_pc() const;
+	int audio_available() const;
 	const uint8_t *main_ram() const { return m_ram; }
 	const m92_video *video() const { return m_video.get(); }
-	uint8_t *eeprom(size_t &size) { size = sizeof(m_eeprom); return m_game && m_game->eeprom ? m_eeprom : nullptr; }
-
-	// hiscores (see m92_hiscore)
-	size_t hi_size() const;
-	bool hi_ready();
-	void hi_get(uint8_t *dst);
-	void hi_put(const uint8_t *src);
-
-	// scheduler_base
-	attotime current_time() const override;
-	void timer_changed(emu_timer *t) override;
 
 	// ---- used by the handlers (public so the static thunks can reach them)
 	struct pic8259
@@ -191,22 +157,15 @@ public:
 	static u16 sound_io_read(void *ctx, offs_t a, u16 mask);
 	static void sound_io_write(void *ctx, offs_t a, u16 d, u16 mask);
 
+protected:
+	bool cpu_held(int slot) const override { return slot == 1 && m_sound_in_reset; }
+	void cpu_rate(int slot) override;
+
 private:
 	friend class m92_sound;
 	friend class m92_video;
 
-	struct cpu_slot
-	{
-		cpu_device *cpu = nullptr;
-		u64 cycles_per_sec = 0;      // cycles, not clocks (V35: clock / PCK)
-		s64 ps_frac = 0;             // carried picoseconds * cycles_per_sec, for exact time
-		int requested = 0;           // cycles asked for in the current run
-	};
-
 	void map_main();
-	void run_until(attotime target);
-	void run_cpu(cpu_slot &s, attotime until);
-	void defer(std::function<void()> fn);
 	void update_cpu_rates();
 
 	void scanline(s32 line);
@@ -222,12 +181,6 @@ private:
 
 	std::unique_ptr<nec_common_device> m_maincpu;
 	std::unique_ptr<v35_device> m_soundcpu;
-	cpu_slot m_slot[2];
-	cpu_slot *m_running = nullptr;
-	attotime m_now;                  // machine time between slices
-	attotime m_slice_end;
-	std::vector<std::function<void()>> m_deferred;
-	bool m_abort = false;
 	int m_cpu_speed = 100;
 
 	save_registry m_save;
@@ -242,12 +195,6 @@ private:
 	u8 m_eeprom[0x2000];
 	u8 m_bank = 0;
 
-	// inputs
-	u8 m_player[4] = { 0, 0, 0, 0 };
-	u8 m_system = 0;
-	u16 m_dsw = 0xffff;
-	u8 m_dsw3 = 0xff;
-
 	// latches
 	u8 m_soundlatch = 0, m_soundlatch_pending = 0;
 	u8 m_soundlatch2 = 0, m_soundlatch2_pending = 0;
@@ -260,11 +207,7 @@ private:
 
 	std::unique_ptr<m92_video> m_video;
 	std::unique_ptr<m92_sound> m_sound;
-	line_cb m_line_cb;
-	line_sink m_line_sink;
-	line_hook m_line_hook;
 	bool m_video_synced = false;
-	u64 m_frame = 0;
 };
 
 #endif

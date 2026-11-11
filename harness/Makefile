@@ -6,7 +6,7 @@ CXXFLAGS = -std=c++20 $(OPT) -I../core -isystem ../third_party/mame -isystem ../
 	   -isystem ../third_party/miniz
 WARN = -Wall -Wextra -Wshadow
 CFLAGS = $(OPT) -I../third_party/miniz
-CORE = ../core/m92.cpp ../core/m92_video.cpp ../core/m92_sound.cpp \
+CORE = ../core/irem_machine.cpp ../core/m92.cpp ../core/m92_video.cpp ../core/m92_sound.cpp \
        ../third_party/mame/irem_cpu.cpp ../third_party/mame/nec/nec.cpp \
        ../third_party/mame/nec/v25.cpp ../third_party/mame/nec/v25sfr.cpp \
        ../third_party/ymfm/ymfm_opm.cpp

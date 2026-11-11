@@ -80,7 +80,7 @@ void m92_set_line_hook (TM92LineHook *pHook, void *pCtx);
 
 /* multicore: lines handed to a sink with the registers to draw them with;
  * the sync function must wait until every line handed over has been drawn */
-typedef struct { uint16_t pf_control[3][4]; uint16_t master_control[4]; uint16_t videocontrol; } TM92LineRegs;
+typedef struct { uint16_t nWord[17]; } TM92LineRegs;	/* what the core needs, opaque */
 typedef void TM92LineSink (void *pCtx, int y, const TM92LineRegs *pRegs);
 void m92_set_line_sink (TM92LineSink *pSink, void *pCtx);	/* 0 = draw on this core */
 void m92_set_video_sync (void (*pSync) (void *), void *pCtx);
