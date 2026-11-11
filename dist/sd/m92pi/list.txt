@@ -1,59 +1,55 @@
 # m92-pi - names in the game list
-# One line per MAME set: set=Title, or set=Title|Region to choose the text
-# shown under the list too. Without |Region, the region comes from MAME's
-# name ("Hook (Japan)" -> JAPAN). A set missing here shows MAME's full name.
+# One line per MAME set: set=Title|Region. The region is shown under the
+# list, next to the set name. A set missing here shows MAME's full name
+# and the region in its brackets.
 # Titles longer than 33 characters are cut in the list.
 
 atompunk=Atomic Punk|US
 bbmanw=Bomber Man World|World
 bbmanwj=Bomber Man World|Japan Set 1
 bbmanwja=Bomber Man World|Japan Set 2
-bmaster=Blade Master
+bmaster=Blade Master|World
 bombrman=Bomber Man|Japan
-crossbld=Cross Blades!
+crossbld=Cross Blades!|Japan
 dsoccr94j=Dream Soccer '94|Japan
 dynablst=Dynablaster / Bomber Man|World
 geostorm=Geo Storm|Japan 014
 geostorma=Geo Storm|Japan 026
-gunforc2=Gun Force II
-gunforce=Gunforce
-gunforcej=Gunforce
-gunforceu=Gunforce
-gunhohki=Mahou Keibitai Gun Hohki
+gunforc2=Gun Force II|US
+gunforce=Gunforce|World
+gunforcej=Gunforce|Japan
+gunforceu=Gunforce|US
+gunhohki=Mahou Keibitai Gun Hohki|Japan
 gussun=Gussun Oyoyo|Japan
-hasamu=Hasamu|Japan
-hook=Hook
-hookj=Hook
-hooku=Hook
-inthunt=In The Hunt
+hook=Hook|World
+hookj=Hook|Japan
+hooku=Hook|US
+inthunt=In The Hunt|World
 inthuntk=In The Hunt|Korea
-inthuntu=In The Hunt
-kaiteids=Kaitei Daisensou
+inthuntu=In The Hunt|US
+kaiteids=Kaitei Daisensou|Japan
 leaguemn=Yakyuu Kakutou League-Man|Japan Set 1
 leaguemna=Yakyuu Kakutou League-Man|Japan Set 2
-lethalth=Lethal Thunder
+lethalth=Lethal Thunder|World
 majtitl2=Major Title 2|World Set 1
 majtitl2a=Major Title 2|World Set 2
 majtitl2b=Major Title 2|World Set 3
-majtitl2j=Major Title 2
-matchit2=Match It II
-mysticri=Mystic Riders
+majtitl2j=Major Title 2|Japan
+mysticri=Mystic Riders|World
 mysticrib=Mystic Riders|Bootleg
-nbbatman=Ninja Baseball Bat Man
-nbbatmanu=Ninja Baseball Bat Man
+nbbatman=Ninja Baseball Bat Man|World
+nbbatmanu=Ninja Baseball Bat Man|US
 newapunk=New Atomic Punk|US
-psoldier=Perfect Soldiers
-quizf1=Quiz F1 1-2 Finish|Japan
-riskchal=Risky Challenge
-rtypeleo=R-Type Leo
-rtypeleoj=R-Type Leo
-shisen2=Shisensho II|Japan
+psoldier=Perfect Soldiers|Japan
+riskchal=Risky Challenge|World
+rtypeleo=R-Type Leo|World
+rtypeleoj=R-Type Leo|Japan
 skingame=The Irem Skins Game|US Set 1
 skingame2=The Irem Skins Game|US Set 2
-ssoldier=Superior Soldiers
-thndblst=Thunder Blaster
-uccops=Undercover Cops
+ssoldier=Superior Soldiers|US
+thndblst=Thunder Blaster|Japan
+uccops=Undercover Cops|World
 uccopsar=Undercover Cops Alpha|World
 uccopsaru=Undercover Cops Alpha|US
-uccopsj=Undercover Cops
-uccopsu=Undercover Cops
+uccopsj=Undercover Cops|Japan
+uccopsu=Undercover Cops|US

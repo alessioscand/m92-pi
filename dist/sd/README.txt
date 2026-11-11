@@ -1,13 +1,18 @@
-m92-pi 1.0.1 - Bare-metal Irem M92 emulator for Raspberry Pi 3 and 4
+m92-pi 1.1.0 - Bare-metal Irem M92 and M90 emulator for Raspberry Pi 3 and 4
 ============================================================================
 
-WHAT'S NEW IN 1.0.1
+WHAT'S NEW IN 1.1.0
 
+  - Irem M90 games: Bomber Man / Dynablaster / Atomic Punk, Bomber Man
+    World / New Atomic Punk, Risky Challenge / Gussun Oyoyo. Up to 4
+    players in the Bomber Man games (Cabinet in DIP SWITCHES). Hasamu,
+    Quiz F1 and Match It II are not supported.
   - The menus answer every player: player 3 or 4 can open the in-game
     menu and use it.
   - The EEPROM of Major Title 2 and The Irem Skins Game is written to
     the card only when it has changed.
   - In m92pi/m92pi.cfg, a line starting with # is a comment.
+  - Every line of m92pi/list.txt gives the region too.
   - Alignment of the code shared with the other projects (neo-pi,
     nes-pi).
   - To update a card, copy the new files over the old ones: games,
@@ -19,9 +24,10 @@ SET-UP
   1. Use a microSD card formatted as FAT32, with a standard partition
      table.
   2. Copy EVERYTHING in this folder to the card's root.
-  3. Put your M92 games in the m92pi folder as MAME ROM sets, one .zip per
-     set with MAME's file name (uccops.zip, hook.zip, inthunt.zip...). A
-     clone also needs its parent's zip (uccopsj.zip needs uccops.zip).
+  3. Put your M92 and M90 games in the m92pi folder as MAME ROM sets, one
+     .zip per set with MAME's file name (uccops.zip, hook.zip,
+     dynablst.zip...). A clone also needs its parent's zip (uccopsj.zip
+     needs uccops.zip).
      ROMs are identified by CRC, so sets from other MAME versions work.
   4. Connect a USB gamepad and the display (on a Pi 4, HDMI 0, next to the
      power socket). Insert the card and switch on.
@@ -34,7 +40,7 @@ START-UP
   - Game list: Up/Down to choose, Left/Right to jump by 8, A or Start to
     play, D for OPTIONS. Bottom left: the MAME set name and region.
   - Names in the list: m92pi/list.txt, one line per set, as
-    set=Title|Region. Sets not listed there use MAME's name.
+    set=Title|Region. Sets not listed there use MAME's name and region.
   - Benchmark: an empty file named m92pi/BENCH (no extension) runs one on
     the selected game before normal play: 30 seconds of the game's demo,
     then 60 seconds measured. Do not touch anything. Results in
@@ -61,7 +67,7 @@ SETTING UP THE CONTROLS
 CONTROLS IN GAME
 
   D-pad or left stick       Joystick
-  A, B                      Buttons 1 and 2 (M92 games use two buttons)
+  A, B                      Buttons 1 and 2 (the games use two buttons)
   C, D, E, F                Buttons 3 to 6, only for Superior / Perfect
                             Soldiers (A B C punches, D E F kicks)
   Start                     Start
@@ -74,8 +80,8 @@ CONTROLS IN GAME
   Select + D                Credits (B closes them)
 
   Pads become players 1, 2, 3 and 4 in the order they are connected. For 3
-  or 4 players, games with a Cabinet switch need it set to 3 PLAYERS or
-  4 PLAYERS in DIP SWITCHES.
+  or 4 players, games with a Cabinet switch need it set for 3 or 4
+  players in DIP SWITCHES.
 
 IN-GAME MENU (hold Select for 1 second; B resumes the game)
 
@@ -97,9 +103,10 @@ OPTIONS MENU (D in the game list, or from the in-game menu)
   A or Left/Right changes a setting, B goes back. Settings are stored in
   m92pi/m92pi.cfg.
 
-  CPU SPEED     NORMAL: the original 9 MHz. TURBO: 20 MHz, like Turbo in
-                the MiSTer core: less slowdown where the original hardware
-                slows down. Some games may behave differently; NORMAL is
+  CPU SPEED     NORMAL: the original speed. TURBO: 2.2 times faster (on
+                the M92, 20 MHz instead of 9, like Turbo in the MiSTer
+                core): less slowdown where the original hardware slows
+                down. Some games may behave differently; NORMAL is
                 the accurate setting. On a Pi 3, TURBO may slow down the
                 heaviest games.
   SCANLINES     OFF / LIGHT / MEDIUM / STRONG / COMPOSITE. COMPOSITE has no
@@ -138,8 +145,8 @@ LOW INPUT LAG
   too often, that game goes back to double buffering + frame delay
   (LOG.TXT says so); the next game started from the list tries again.
 
-  The M92 runs at 60.01 Hz: on a 60 Hz TV, one frame in about 100 seconds
-  is repeated or skipped.
+  The M92 and M90 run at 60.01 Hz: on a 60 Hz TV, one frame in about
+  100 seconds is repeated or skipped.
 
 PIXEL PERFECT
 
@@ -182,7 +189,7 @@ FILES ON THE CARD (m92pi folder)
 IF SOMETHING GOES WRONG
 
   The green LED blinks a number of times, repeatedly:
-  2 = HDMI   3 = SD card   5 = no M92 game   6 = emulator   7 = memory
+  2 = HDMI   3 = SD card   5 = no game   6 = emulator   7 = memory
 
   A game that cannot be loaded (a ROM missing, for example) shows CANNOT
   LOAD GAME, then the list again; LOG.TXT names the missing ROM.
