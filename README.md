@@ -210,7 +210,7 @@ IRQ lines as MAME's driver: 0 vblank, 1 sprite DMA end, 2 raster, 3 sound latch 
   row scroll, wide layers, the three tile priority groups.
 - **Sprites (GA21/GA22)**: the DMA copies sprites as the MiSTer core does:
   objects are written from slot `0x100 - ptr` downwards, so the first object
-  copied ends up on top. (MAME's order lost the portraits in Undercover Cops.)
+  copied ends up on top (MAME copies them in another order).
 - **Mixing**: as MiSTer's `palram.sv`: one sprite line buffer in which the last
   sprite written wins, then per pixel a choice between sprite and tile colour.
 - **Per-line sprite lists**: when the sprite buffer changes (DMA, CPU write, save
@@ -237,8 +237,7 @@ IRQ lines as MAME's driver: 0 vblank, 1 sprite DMA end, 2 raster, 3 sound latch 
 - The core's output is MAME's (the hashes of `test/hashrun.cpp` check it). On
   the Pi, `FrameTakeAudio` in `src/frame.cpp` then applies the cabinet voicing, always
   on: low shelf +4 dB below 120 Hz and 2nd-order low-pass at 8 kHz (RBJ biquads,
-  float, one sample at a time, no latency), -0.5 dB to keep the loudness. Flat
-  MAME sound is tinny on the TV.
+  float, one sample at a time, no latency), -0.5 dB to keep the loudness.
 
 ### 3.8 Game tables (`tools/gen_m92_tables.py`)
 
@@ -254,9 +253,9 @@ python3 tools/gen_m92_tables.py <mame>/src/mame/irem > core/m92_games.inc
   merged as MAME's `ioport_port::insert_field` does: a later field removes the
   fields it overlaps, **unless both carry different conditions** (then both stay,
   as with Coinage in some sets). DIPs sorted by switch location.
-- Things fixed while writing it (keep them): the decryption table has `xxxx`
-  entries (parse comma tokens), the machine map regex must match `m_maincpu`
-  only, Major Title 2 needs the `eeprom` region.
+- Special cases handled: `xxxx` entries in the decryption table (parsed as
+  comma tokens), the machine map matched on `m_maincpu` only, the `eeprom`
+  region of Major Title 2.
 - 40 sets. Never edit `m92_games.inc` by hand.
 
 Hiscores: `core/m92_hiscore.inc`, from MAME's hiscore plugin data:
@@ -268,7 +267,7 @@ python3 tools/gen_m92_hiscore.py <mame>/plugins/hiscore/hiscore.dat \
 
 Only the sets in `m92_games.inc`, only `:maincpu,program` rows (it stops on
 `@delay` or a prefill). MAME master `f337ad7` (7 Nov 2026): 34 of the 40
-sets have an entry (the others: see 4). Never edit `m92_hiscore.inc` by hand.
+sets have an entry. Never edit `m92_hiscore.inc` by hand.
 
 ### 3.9 C API (`m92_api.h`)
 
@@ -309,8 +308,7 @@ the M90 ones.
   priority tiles (video control bits 0-1); the samples clocked at 32 MHz /
   4096 = 7812.5 Hz (MAME: 7680 Hz); only the YM2151's left output wired; the
   samples through a 3.5 kHz low-pass filter and -10 dB; the picture switched
-  off shows colour 0. If something looks or sounds wrong against MAME, these
-  are the first places to look.
+  off shows colour 0.
 - **Not supported**: Hasamu, Quiz F1 and Match It II / Shisensho II (384
   pixels wide, Quiz F1 and Match It II 256 lines high): the core handles them
   (visible area per game, Quiz F1's ROM bank) but the front-end is built for
@@ -448,10 +446,7 @@ cd harness && make
 **Regression check** (`test/hashrun.cpp`, build command in the file): one line per
 frame with the picture and sound hashes, for fixed scripted inputs. Run it on
 the old and the new build and compare the files: any optimisation must give
-identical files. `MC=1` draws the lines late, as the multicore build does. 0.1.1
-was checked on 19 sets × 5400 frames (Undercover Cops, In the Hunt, Hook, R-Type
-Leo, Blade Master, Mystic Riders, Ninja Baseball Batman, Major Title 2 and
-clones).
+identical files. `MC=1` draws the lines late, as the multicore build does.
 
 ### 5.2 Against MAME
 
@@ -460,32 +455,6 @@ with a Lua autoboot script that saves a snapshot every N frames and the audio;
 the same frames from `m92test` are compared pixel by pixel. MAME 0.264 wants
 the sets' PLD dumps: empty dummy files with the right names added to a copy of
 the zip are enough.
-
-Results so far (Undercover Cops, `uccops`):
-- frames 1050-4500 pixel-identical, except at scene transitions (one frame of
-  difference in when the change is seen);
-- per-second audio RMS matches; level and spectrum (10 bands, 20 Hz-24 kHz) of
-  `uccops` and `uccopsar` match within a few tenths of a dB;
-- the save state test is identical;
-- at boot MAME shows a palette test pattern that m92-pi does not (a
-  behaviour of the video control register MAME emulates and m92-pi does not).
-
-M90 (`dynablst`, `bbmanw`, `riskchal`, a snapshot every 50 frames for 29 s,
-compared with an offset of up to 6 frames):
-- pixel-identical while the games run alike: 25 of 34 (`dynablst`), 28 of 34
-  (`bbmanw`); the work RAM of `riskchal` is identical to MAME's frame by
-  frame up to frame 196;
-- then the attract demos drift apart (the games' random numbers depend on
-  timing, which follows the real board's 262 lines, not MAME's screen), so
-  later frames differ by game state, not by drawing;
-- MAME shows garbage before the games set the video up, m92-pi black;
-- the flying logo of Bomber Man World (row scroll) is drawn whole by m92-pi
-  and as broken lines by MAME;
-- per-second audio RMS follows MAME's (m92-pi about 2.5 times louder, as
-  loud as the M92 games);
-- save state test identical, also with TURBO; the hiscore tables are found
-  (`dynablst` and `riskchal` change one byte inside MAME's range by
-  themselves).
 
 ### 5.3 QEMU
 
@@ -504,40 +473,8 @@ press keys for about 120 ms through the QEMU monitor's `sendkey`).
 beam racing) and runs slower than real time: it checks screens and menus, not
 timing.
 
-### 5.4 On hardware
+## 6. Conventions
 <!-- M.A.R.K. 13 · NO FLESH SHALL BE SPARED -->
-
-0.1.1-rc3 on a Pi 4 (1500 MHz), from `BENCH.TXT` and `LOG.TXT`:
-- Blade Master: 4.1 ms per frame on average (5.5 ms max), no frame over 16.7 ms;
-- in play, all games tried: 60.00 fps, no missed vsync, no audio underrun;
-  pads → top of the picture leaving the Pi 1.5 ms; beam racing with no late rows
-  (smallest margin about 0.3 ms); COMPOSITE 1.7 + 1.7 ms on core 2;
-- the first minute after loading a game shows a few audio underruns and one long
-  frame (the switch from loading to playing): left as it is.
-
-1.0.0 (0.1.2 with the code reorganised), against 0.1.2 (Ninja Baseball
-Bat Man, CPU NORMAL, SCANLINES): the same `Check` lines (`9152BADB` /
-`96C639D6`) and MCTEST "all lines identical" on both boards.
-
-| board | emulation + audio | drawing | total | top speed |
-|---|---|---|---|---|
-| Pi 3 B+ (1400 MHz) | 7.09 ms | 2.13 ms | 9.22 ms | 180% (published 0.1.2: 181%) |
-| Pi 4 (1500 MHz) | 3.48 ms | 2.15 ms | 5.64 ms | 295% |
-
-## 6. Known gaps / to do
-
-- Flip screen not emulated (the DIP is hidden in the menu).
-- M90: Hasamu, Quiz F1, Match It II (see 3.10). The M90 choices taken from
-  the MiSTer core still to be checked on more scenes.
-- The palette test pattern MAME shows at boot (see 5.2).
-- Major Title 2 EEPROM saving not tested.
-- Composite video for CRT TVs (all three projects): NTSC 240p from the
-  Pi 3/4 minijack, enabled in `config.txt` by those who want it (no menu).
-  Beam racing on the composite HVS channel, analogue (PWM) audio, no
-  scanlines or COMPOSITE filter. It goes behind `CScreen` (see 4.1).
-- A zoom option, if it makes sense (all three projects).
-
-## 7. Conventions
 
 - Files from MAME keep their `license:BSD-3-Clause` / `copyright-holders` header;
   m92-pi's own files are GPL-3.0-or-later (`SPDX-License-Identifier`).
@@ -551,7 +488,7 @@ Bat Man, CPU NORMAL, SCANLINES): the same `Check` lines (`9152BADB` /
   delay and beam racing.
 - `dist/sd/LICENSES.txt` must list every third-party component in the kernel.
 
-## 8. Credits
+## 7. Credits
 
 - **Alessio Scanderebech**: idea, direction, design, testing on hardware.
 - **Claude** (Anthropic): code and documentation, written with Alessio.
