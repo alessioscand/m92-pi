@@ -135,6 +135,13 @@ def nice(s):
     m = re.fullmatch(r'(\d+ Points?)/1 Ticket', s)
     if m:
         return m.group(1)
+    m = re.fullmatch(r'4 Player (Separate|Shared) Coins', s)
+    if m:
+        return '4P %s Coins' % m.group(1)
+    if s == '4 Player 1&2 3&4 Share Coins':
+        return '4P 1&2, 3&4 Share'
+    if s == 'New Dyna Blaster Global Quest':
+        return 'New Dyna Blaster'
     if s == 'Any Button to Start':
         return 'Any Button Start'
     if s == '2 Coins to Start/1 to Continue':
