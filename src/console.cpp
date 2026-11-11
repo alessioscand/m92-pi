@@ -176,7 +176,7 @@ void CKernel::Fatal (int nCode, const char *pMessage)
 		Log ("  Check that the card is FAT32 and that the files are in its root.", COLOR_TEXT);
 		break;
 	case PROJECT_ERR_GAME:
-		Log ("  Copy at least one M92 game (MAME set, .zip) into the m92pi folder.", COLOR_TEXT);
+		Log ("  Copy at least one M92 or M90 game (MAME set, .zip) into the m92pi folder.", COLOR_TEXT);
 		break;
 	case PROJECT_ERR_MEM:
 		Log ("  Not enough memory.", COLOR_TEXT);

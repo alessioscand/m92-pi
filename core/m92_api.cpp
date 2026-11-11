@@ -3,41 +3,71 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "m92_api.h"
 #include "m92.h"
+#include "m90.h"
 #include <cstring>
 #include <new>
 
 static irem_machine *s_m;
 
-int m92_num_games(void) { return m92_game_count(); }
+// the M92 sets first, then the M90 ones
+struct game_info
+{
+	const char *name, *parent, *desc, *year, *maker;
+	const m92_inputs *inputs;
+	int width, height;
+};
+
+static bool info(int n, game_info &gi)
+{
+	if (const m92_game *g = m92_game_at(n))
+	{
+		gi = { g->name, g->parent, g->desc, g->year, g->manufacturer, g->inputs,
+		       m92_machine::SCREEN_W, m92_machine::SCREEN_H };
+		return true;
+	}
+	if (const m90_game *g = m90_game_at(n - m92_game_count()))
+	{
+		gi = { g->name, g->parent, g->desc, g->year, g->manufacturer, g->inputs, g->vis_w, g->vis_h };
+		return true;
+	}
+	return false;
+}
+
+static const m92_inputs *inputs(int n)
+{
+	game_info gi;
+	return info(n, gi) ? gi.inputs : nullptr;
+}
+
+int m92_num_games(void) { return m92_game_count() + m90_game_count(); }
 
 int m92_find(const char *name)
 {
-	for (int i = 0; i < m92_game_count(); i++)
-		if (!strcmp(m92_game_at(i)->name, name))
+	game_info gi;
+	for (int i = 0; info(i, gi); i++)
+		if (!strcmp(gi.name, name))
 			return i;
 	return -1;
 }
 
-static const m92_game *G(int n)
-{
-	const m92_game *g = m92_game_at(n);
-	return g;
-}
-
-const char *m92_game_name(int n) { return G(n) ? G(n)->name : ""; }
-const char *m92_game_parent(int n) { return G(n) ? G(n)->parent : ""; }
-const char *m92_game_desc(int n) { return G(n) ? G(n)->desc : ""; }
-const char *m92_game_year(int n) { return G(n) ? G(n)->year : ""; }
-const char *m92_game_maker(int n) { return G(n) ? G(n)->manufacturer : ""; }
-int m92_game_players(int n) { return G(n) ? G(n)->inputs->players : 2; }
-int m92_game_buttons(int n) { return G(n) ? G(n)->inputs->buttons : 2; }
+#define FIELD(f, none) { game_info gi; return info(n, gi) ? gi.f : none; }
+const char *m92_game_name(int n) FIELD(name, "")
+const char *m92_game_parent(int n) FIELD(parent, "")
+const char *m92_game_desc(int n) FIELD(desc, "")
+const char *m92_game_year(int n) FIELD(year, "")
+const char *m92_game_maker(int n) FIELD(maker, "")
+int m92_game_width(int n) FIELD(width, 320)
+int m92_game_height(int n) FIELD(height, 240)
+#undef FIELD
+int m92_game_players(int n) { return inputs(n) ? inputs(n)->players : 2; }
+int m92_game_buttons(int n) { return inputs(n) ? inputs(n)->buttons : 2; }
 
 int m92_dip_count(int n)
 {
-	if (!G(n))
+	if (!inputs(n))
 		return 0;
 	int c = 0;
-	for (const m92_dip *d = G(n)->inputs->dips; d->name; d++)
+	for (const m92_dip *d = inputs(n)->dips; d->name; d++)
 		c++;
 	return c;
 }
@@ -46,7 +76,7 @@ int m92_dip_get(int n, int i, TM92Dip *p)
 {
 	if (i < 0 || i >= m92_dip_count(n))
 		return 0;
-	const m92_dip &d = G(n)->inputs->dips[i];
+	const m92_dip &d = inputs(n)->dips[i];
 	p->pName = d.name;
 	p->pLocation = d.loc;
 	p->nMask = d.mask;
@@ -63,31 +93,45 @@ const char *m92_dip_setting_name(int n, int i, int s, uint16_t *value)
 {
 	if (i < 0 || i >= m92_dip_count(n))
 		return nullptr;
-	const m92_dip &d = G(n)->inputs->dips[i];
+	const m92_dip &d = inputs(n)->dips[i];
 	if (s < 0 || s >= d.count)
 		return nullptr;
-	const m92_dip_setting &set = G(n)->inputs->settings[d.first + s];
+	const m92_dip_setting &set = inputs(n)->settings[d.first + s];
 	if (value)
 		*value = set.value;
 	return set.name;
 }
 
-uint16_t m92_dsw_default(int n) { return G(n) ? G(n)->inputs->dsw_default : 0xffff; }
-uint8_t m92_dsw3_default(int n) { return G(n) ? G(n)->inputs->dsw3_default : 0xff; }
+uint16_t m92_dsw_default(int n) { return inputs(n) ? inputs(n)->dsw_default : 0xffff; }
+uint8_t m92_dsw3_default(int n) { return inputs(n) ? inputs(n)->dsw3_default : 0xff; }
 
 int m92_load(int n, TM92Fetch *fetch, void *ctx, char *missing, size_t nmissing)
 {
 	m92_unload();
-	if (!G(n))
+	const m92_inputs *in = inputs(n);
+	if (!in)
 		return 0;
-	m92_machine *m = new (std::nothrow) m92_machine;
-	if (!m)
-		return 0;
-	s_m = m;
-	std::string miss;
-	const bool ok = m->load(G(n), [fetch, ctx](const char *name, uint32_t crc, uint32_t size, uint8_t *dst) {
+	auto rom = [fetch, ctx](const char *name, uint32_t crc, uint32_t size, uint8_t *dst) {
 		return fetch(ctx, name, crc, size, dst) != 0;
-	}, miss);
+	};
+	std::string miss;
+	bool ok;
+	if (const m92_game *g = m92_game_at(n))
+	{
+		m92_machine *m = new (std::nothrow) m92_machine;
+		if (!m)
+			return 0;
+		s_m = m;
+		ok = m->load(g, rom, miss);
+	}
+	else
+	{
+		m90_machine *m = new (std::nothrow) m90_machine;
+		if (!m)
+			return 0;
+		s_m = m;
+		ok = m->load(m90_game_at(n - m92_game_count()), rom, miss);
+	}
 	if (!ok)
 	{
 		if (missing && nmissing)
@@ -98,7 +142,7 @@ int m92_load(int n, TM92Fetch *fetch, void *ctx, char *missing, size_t nmissing)
 		m92_unload();
 		return 0;
 	}
-	s_m->set_dsw(G(n)->inputs->dsw_default, G(n)->inputs->dsw3_default);
+	s_m->set_dsw(in->dsw_default, in->dsw3_default);
 	return 1;
 }
 

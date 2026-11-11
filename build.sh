@@ -14,7 +14,7 @@ for P in $TARGETS; do
 	mkdir -p "$B"
 	find "$B" -maxdepth 1 -type f ! -name '*.core.o' ! -name '*.core.cpp' ! -name 'libm92.a' -delete
 	# the core's objects do not track headers: a changed header rebuilds the whole core
-	if [ -f "$B/libm92.a" ] && [ -n "$(find "$ROOT/core" "$ROOT/third_party/mame" "$ROOT/third_party/ymfm" \( -name '*.h' -o -name '*.hxx' -o -name '*.ipp' -o -name '*.inc' \) -newer "$B/libm92.a")" ]; then
+	if [ -f "$B/libm92.a" ] && [ -n "$(find "$ROOT/core" "$ROOT/third_party/mame" "$ROOT/third_party/ymfm" "$ROOT/third_party/z80" \( -name '*.h' -o -name '*.hxx' -o -name '*.ipp' -o -name '*.inc' \) -newer "$B/libm92.a")" ]; then
 		rm -f "$B"/*.core.o "$B/libm92.a"
 	fi
 	cp "$ROOT"/common/*.c "$ROOT"/common/*.cpp "$ROOT"/src/*.c "$ROOT"/src/*.cpp "$B"/
@@ -22,10 +22,11 @@ for P in $TARGETS; do
 	cp "$ROOT"/third_party/snes_ntsc/snes_ntsc.c "$B"/ 2>/dev/null || true
 	# the core, flattened: m92.cpp -> m92.core.cpp, nec/v25.cpp -> v25.core.cpp ...
 	for f in core/irem_machine.cpp core/m92.cpp core/m92_video.cpp core/m92_sound.cpp core/m92_api.cpp \
+		 core/m90.cpp core/m90_video.cpp core/m90_sound.cpp \
 		 third_party/mame/irem_cpu.cpp third_party/mame/nec/nec.cpp \
 		 third_party/mame/nec/v25.cpp third_party/mame/nec/v25sfr.cpp \
-		 third_party/ymfm/ymfm_opm.cpp; do
-		n="$(basename "$f" .cpp).core.cpp"
+		 third_party/ymfm/ymfm_opm.cpp third_party/z80/z80.c; do
+		n="$(basename "${f%.c*}").core.cpp"		# z80.c too: built as C++
 		cmp -s "$ROOT/$f" "$B/$n" || cp -p "$ROOT/$f" "$B/$n"
 	done
 	CIRCLE="$ROOT/circle-rpi${P}mc"

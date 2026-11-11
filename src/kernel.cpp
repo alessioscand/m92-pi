@@ -95,7 +95,7 @@ TShutdownMode CKernel::Run (void)
 	}
 
 	char Line[180];
-	Log ("m92-pi - bare metal Irem M92 emulator", COLOR_TITLE);
+	Log ("m92-pi - bare metal Irem M92 and M90 emulator", COLOR_TITLE);
 	snprintf (Line, sizeof Line, "Version %s, built %s %s", PROJECT_VERSION, __DATE__, __TIME__);
 	Log (Line, COLOR_DIM);
 
@@ -135,11 +135,11 @@ TShutdownMode CKernel::Run (void)
 
 	// games
 	ScanGames ();
-	snprintf (Line, sizeof Line, "Games found: %u (of the %d M92 sets m92-pi knows)", m_nGames, m92_num_games ());
+	snprintf (Line, sizeof Line, "Games found: %u (of the %d sets m92-pi knows)", m_nGames, m92_num_games ());
 	Log (Line, m_nGames ? COLOR_OK : COLOR_ERR);
 	if (m_nGames == 0)
 	{
-		Fatal (PROJECT_ERR_GAME, "no M92 game (MAME .zip set) in the m92pi folder");
+		Fatal (PROJECT_ERR_GAME, "no M92 or M90 game (MAME .zip set) in the m92pi folder");
 	}
 
 	// USB and audio

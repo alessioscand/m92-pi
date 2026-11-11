@@ -35,7 +35,7 @@ include $(CIRCLEHOME)/Rules.mk
 COREOBJ	:= $(patsubst %.core.cpp,%.core.o,$(wildcard *.core.cpp))
 COREOPT	?= -O3
 COREFLAGS = $(ARCH) $(COREOPT) -std=gnu++20 -fno-exceptions -fno-rtti -fno-math-errno \
-	    -ffunction-sections -fdata-sections $(COREWARN) -DNDEBUG -I @CORE@ -isystem @THIRD@/mame -isystem @THIRD@/mame/nec -isystem @THIRD@ -isystem @THIRD@/ymfm
+	    -ffunction-sections -fdata-sections $(COREWARN) -DNDEBUG -I @CORE@ -isystem @THIRD@/mame -isystem @THIRD@/mame/nec -isystem @THIRD@ -isystem @THIRD@/ymfm -isystem @THIRD@/z80
 
 COREWARN = -w				# MAME's and ymfm's sources as they are
 m92%.core.o irem%.core.o m90%.core.o: COREWARN = -Wall -Wextra -Wshadow	# ours

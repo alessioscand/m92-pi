@@ -13,7 +13,8 @@ the end of this file.
 IREM is a trademark of its owner. The games are not included.
 
 ==============================================================================
-MAME (NEC V33/V35 CPU cores, Irem M92 and GA20 descriptions) - BSD 3-Clause
+MAME (NEC V33/V35 CPU cores, Irem M92, M90 and GA20 descriptions) -
+BSD 3-Clause
 ==============================================================================
 Copyright (c) the MAME authors, among them Bryan McPhail, Alex W. Jackson,
 Acho A. Tang, R. Belmont and Valley Bell.
@@ -44,8 +45,9 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-The video mixing of sprites and tiles follows the MiSTer Irem M92 core by
-Martin Donlon (wickerwaka); no code of it is included.
+The video mixing of sprites and tiles follows the MiSTer Irem M92 and M90
+cores by Martin Donlon (wickerwaka), as do the M90's sample clock and sound
+filter; no code of them is included.
 
 The hiscore table locations come from the hiscore.dat of MAME's hiscore
 plugin (Leezer and contributors, based on the unofficial hiscore.dat of
@@ -92,6 +94,33 @@ The menu font "You Squared" and the game list font "Cyberwire" are from the
 ZX Origins collection by Damien Guard,
 https://damieng.com/typography/zx-origins/ - free to use in games with
 credit. Thank you, Damien.
+
+==============================================================================
+Z80 CPU core (M90 sound CPU) - MIT
+==============================================================================
+MIT License
+
+Copyright (c) 2019 Nicolas Allemand
+Copyright (c) 2020-2022 Rupert Carmichael
+Copyright (c) 2022 rofl0r
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 ==============================================================================
 miniz - MIT

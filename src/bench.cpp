@@ -304,7 +304,7 @@ void CKernel::Benchmark (void)
 	FormatMs (c, sizeof c, T.nMax); FormatMs (d, sizeof d, T.nMin);
 	snprintf (Line, sizeof Line, "  total                   %7s %7s %7s %7s", a, b, c, d);
 	REPORT (COLOR_TEXT);
-	snprintf (Line, sizeof Line, "Top speed: %u%% of a real M92 board (100%% = 60.01 fps)", nSpeed);
+	snprintf (Line, sizeof Line, "Top speed: %u%% of the real board (100%% = 60.01 fps)", nSpeed);
 	REPORT (nSpeed >= 150 ? COLOR_OK : COLOR_ERR);
 	snprintf (Line, sizeof Line, "Frames over 16.7 ms (too slow for full speed): %u of %u (%u.%u%%)",
 		  nOver, BENCH_FRAMES, nOver * 100 / BENCH_FRAMES, (nOver * 1000 / BENCH_FRAMES) % 10);

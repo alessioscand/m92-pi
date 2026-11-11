@@ -205,7 +205,11 @@ void CKernel::ScanGames (void)
 		int nGame = m92_find (Base);
 		if (nGame < 0)
 		{
-			continue;			// not an M92 set (a parent's zip is fine too)
+			continue;			// not an M92 or M90 set (a parent's zip is fine too)
+		}
+		if (m92_game_width (nGame) != 320 || m92_game_height (nGame) != 240)
+		{
+			continue;			// M90 games with a wider or taller picture: not yet
 		}
 		// a clone needs its parent's zip
 		const char *pParent = m92_game_parent (nGame);

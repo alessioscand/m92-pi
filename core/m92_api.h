@@ -1,5 +1,5 @@
 /*
- * m92-pi - C interface to the M92 core
+ * m92-pi - C interface to the M92 and M90 cores
  *
  * The core is C++ with the standard library; the Circle front-end is built
  * without it. This header is all the front-end sees (as nes-pi's nes_core.h).
@@ -25,6 +25,8 @@ const char *m92_game_desc (int nGame);			/* "Undercover Cops (World)" */
 const char *m92_game_year (int nGame);
 const char *m92_game_maker (int nGame);
 int m92_game_players (int nGame);			/* 2, 3 or 4 */
+int m92_game_width (int nGame);				/* the picture: 320 or 384 */
+int m92_game_height (int nGame);			/* 240 or 256 */
 int m92_game_buttons (int nGame);
 
 /* ---- DIP switches -------------------------------------------------------

@@ -648,11 +648,12 @@ void CUI::DrawCredits (const char *pVersion)
 	CText (y0 + 48, "BY A.SCANDEREBECH", UI_VALUE);
 	Fill (x0 + 8, y0 + 62, x1 - x0 - 15, 1, UI_FRAME2);
 
-	static const char *Rows[9][2] =
+	static const char *Rows[10][2] =
 	{
 		{"CPUS",   "MAME NEC - B.MCPHAIL"},
-		{"M92",    "MAME M92 - B.MCPHAIL"},
-		{"VIDEO",  "MISTER M92 - M.DONLON"},
+		{"Z80",    "N.ALLEMAND, R.CARMICHAEL"},
+		{"BOARDS", "MAME M92 M90 - B.MCPHAIL"},
+		{"VIDEO",  "MISTER - M.DONLON"},
 		{"SOUND",  "YMFM - A.GILES"},
 		{"GA20",   "MAME - A.TANG,R.BELMONT"},
 		{"ZIP",    "MINIZ - R.GELDREICH"},
@@ -660,9 +661,9 @@ void CUI::DrawCredits (const char *pVersion)
 		{"NTSC",   "BLARGG - S.GREEN"},
 		{"FONT",   "ZX ORIGINS - D.GUARD"}
 	};
-	for (int i = 0; i < 9; i++)
+	for (int i = 0; i < 10; i++)
 	{
-		int y = y0 + 68 + i * 10;
+		int y = y0 + 67 + i * 9;
 		Text (x0 + 12, y, Rows[i][0], Dim (UI_DIM, 80));
 		Text (x0 + 12 + 7 * 8, y, Rows[i][1], 0xEBEBEB);
 	}
