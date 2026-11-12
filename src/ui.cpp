@@ -370,7 +370,7 @@ void CUI::DrawPanelMenu (boolean bOverGame, const char *pTitle,
 			 const TMenuItem *pItems, unsigned nItems, unsigned nSel,
 			 const char *pMessage, u32 nMessageColor,
 			 const TButtonHint *pHints, unsigned nHints, const char *pFooter,
-			 boolean bWide)
+			 boolean bWide, unsigned nRows, boolean bMoreAbove, boolean bMoreBelow)
 {
 	if (bOverGame)
 	{
@@ -381,8 +381,9 @@ void CUI::DrawPanelMenu (boolean bOverGame, const char *pTitle,
 		Background ();
 	}
 
-	const int nStep = nItems > 8 ? 12 : 15;		// long lists (controls) a bit tighter
-	int nInner = 22 + (int) nItems * nStep + 22;		// title + items + message line
+	const unsigned nSpace = nRows ? nRows : nItems;	// rows the panel is sized for
+	const int nStep = nSpace > 8 ? 12 : 15;		// long lists (controls) a bit tighter
+	int nInner = 22 + (int) nSpace * nStep + 22;		// title + items + message line
 	int y0 = (190 - nInner) / 2 + 4;
 	if (y0 < 4) y0 = 4;
 	// DIP SWITCHES uses the width of the game list: MAME's names fit in full
@@ -443,7 +444,27 @@ void CUI::DrawPanelMenu (boolean bOverGame, const char *pTitle,
 
 	if (pMessage && pMessage[0])
 	{
-		Text (x0 + 22, y0 + 32 + (int) nItems * nStep + 4, pMessage, nMessageColor);
+		Text (x0 + 22, y0 + 32 + (int) nSpace * nStep + 4, pMessage, nMessageColor);
+	}
+
+	// more rows out of view: a small arrow in the right corner, level with the
+	// title (above) or the message line (below)
+	for (int a = 0; a < 2; a++)
+	{
+		if (a == 0 ? !bMoreAbove : !bMoreBelow)
+		{
+			continue;
+		}
+		const int cx = x1 - 13;
+		const int cy = a == 0 ? y0 + 7 : y0 + nInner - 3;
+		for (int pass = 0; pass < 2; pass++)		// shadow, then arrow
+		{
+			for (int r = 0; r < 5; r++)
+			{
+				int hw = a == 0 ? r : 4 - r;
+				Fill (cx - hw + 1 - pass, cy + r + 1 - pass, 2 * hw + 1, 1, pass == 0 ? 0x000000u : UI_VALUE);
+			}
+		}
 	}
 
 	if (pFooter && pFooter[0])

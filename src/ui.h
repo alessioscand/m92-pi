@@ -70,7 +70,10 @@ public:
 			    const TMenuItem *pItems, unsigned nItems, unsigned nSel,
 			    const char *pMessage, u32 nMessageColor,
 			    const TButtonHint *pHints, unsigned nHints, const char *pFooter,
-			    boolean bWide = FALSE);
+			    boolean bWide = FALSE, unsigned nRows = 0,
+			    boolean bMoreAbove = FALSE, boolean bMoreBelow = FALSE);
+	// nRows: panel always sized for this many rows (a list that scrolls keeps its
+	// shape); bMoreAbove / bMoreBelow: arrows in the corners, more rows out of view
 	// Small box drawn over the current buffer contents
 	void DrawBox (const char *pLine1, const char *pLine2, const TButtonHint *pHint);
 	// Controls set-up: nStep 0-7 = A B C D START SELECT E F being asked, 8 = saved

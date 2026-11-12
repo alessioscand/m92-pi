@@ -351,9 +351,11 @@ void CKernel::RunDipMenu (void)
 		if (nSel >= nFirst + Window) nFirst = nSel - Window + 1;
 		if (nFirst + Window > nItems) nFirst = nItems > Window ? nItems - Window : 0;
 		unsigned nShown = nItems - nFirst < Window ? nItems - nFirst : (unsigned) Window;
+		// the panel keeps the same size for every game and every list length;
+		// the arrows say that there are more switches above or below
 		static const TButtonHint Hints[2] = {{'A', "CHANGE"}, {'B', "BACK"}};
 		m_pUI->DrawPanelMenu (TRUE, "DIP SWITCHES", Items + nFirst, nShown, nSel - nFirst, pMsg, UI_VALUE,
-				      Hints, 2, S.pLocation, TRUE);
+				      Hints, 2, S.pLocation, TRUE, Window, nFirst > 0, nFirst + nShown < nItems);
 		ShowUIFrame ();
 	}
 
@@ -408,8 +410,8 @@ int CKernel::ChoosePad (void)
 }
 
 // Asks for A B C D E F SELECT START in turn on one pad (directions are
-// automatic), then saves on its own. A button already used is ignored; Esc on
-// the keyboard cancels.
+// automatic), then saves on its own. A button already used skips the function
+// being asked for; Esc on the keyboard cancels.
 boolean CKernel::RunMapping (unsigned nSlot, boolean bOverGame)
 {
 	// slots in the order of the logical bits: A B C D START SELECT E F;
@@ -474,24 +476,16 @@ boolean CKernel::RunMapping (unsigned nSlot, boolean bOverGame)
 			if (nButton >= 0)
 			{
 				const unsigned nCur = SlotOfStep[nStep];
-				boolean bUsed = FALSE;
-				for (unsigned i = 0; i < nStep; i++)
+				TBind &B = Binds[MAP_FIRST_BUTTON + nCur];
+				if (!CInput::IsButtonBound (Binds, MAP_COUNT, nButton))
 				{
-					const TBind &rB = Binds[MAP_FIRST_BUTTON + SlotOfStep[i]];
-					if (rB.nType == BindButton && rB.nIndex == (u8) nButton)
-					{
-						bUsed = TRUE;
-					}
-				}
-				if (!bUsed)
-				{
-					TBind &B = Binds[MAP_FIRST_BUTTON + nCur];
 					B.nType = BindButton;
 					B.nIndex = (u8) nButton;
 					B.nValue = 0;
-					CInput::DescribeBind (B, Values[nCur], sizeof Values[nCur]);
-					nStep++;
 				}
+				// a button already assigned skips this function: it stays unassigned
+				CInput::DescribeBind (B, Values[nCur], sizeof Values[nCur]);
+				nStep++;
 				bWaitRelease = TRUE;
 			}
 		}

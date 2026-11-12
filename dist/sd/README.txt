@@ -55,8 +55,9 @@ SETTING UP THE CONTROLS
   are used only by Superior / Perfect Soldiers. After the last one, the
   set-up is saved (SAVED).
 
-  Directions need no set-up: the d-pad, hat and left stick always work. A
-  button already assigned is ignored. On a keyboard, Esc cancels.
+  Directions need no set-up: the d-pad, hat and left stick always work. To
+  skip a function, press a button already assigned: it stays unassigned
+  (shown as -). On a keyboard, Esc cancels.
 
   The set-up applies to every pad of the same model and is stored in
   m92pi/pads.cfg. To redo it: OPTIONS (D in the game list) > CONTROLS.
