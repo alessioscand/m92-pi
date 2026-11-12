@@ -10,6 +10,10 @@ WHAT'S NEW IN 1.1.0
   - The EEPROM of Major Title 2 and The Irem Skins Game is written to
     the card only when it has changed.
   - Every line of m92pi/list.txt gives the region too.
+  - DIP SWITCHES keeps the same size for every game, with arrows when
+    more switches are out of view.
+  - Setting up the controls: a function can be skipped by pressing a
+    button already assigned.
   - Fixed some bugs and aligned the code shared with the other projects
     (neo-pi, nes-pi).
   - To update a card, copy the new files over the old ones: games,
