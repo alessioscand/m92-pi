@@ -579,15 +579,18 @@ html.hw-shake .sheet { animation: hw-shake 1.8s steps(1, end) both; }
     if (e.dataset.width) e.style.width = (e.dataset.width * 100) + '%';
   }
 
+  // the pictures are cropped (zoom) so that the subject looks closer; the canvas stays 320x240
+  const CROP = {x: 84, y: 62, w: 220};
+  const SW = CROP.w, SH = CROP.w * 3 / 4;
   function drawTV(canvas, f) {
     const g = canvas.getContext('2d');
     g.fillStyle = '#000';
     g.fillRect(0, 0, 320, 240);
     if (!before.complete || !after.complete) return;
-    g.drawImage(before, 0, 0);
+    g.drawImage(before, CROP.x, CROP.y, SW, SH, 0, 0, 320, 240);
     const rows = Math.max(0, Math.min(240, Math.floor((f - canvas.dataset.shown) / FRAME * 240)));
     if (rows > 0) {
-      g.drawImage(after, 0, 0, 320, rows, 0, 0, 320, rows);
+      g.drawImage(after, CROP.x, CROP.y, SW, SH * rows / 240, 0, 0, 320, rows);
       if (rows < 240) {                  // the line being sent
         g.fillStyle = '#000';
         g.fillRect(0, rows - 2, 320, 8);
