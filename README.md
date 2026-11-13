@@ -1,14 +1,13 @@
 # m92-pi - Technical notes
 
-Bare-metal Irem M92 emulator for Raspberry Pi 3 and 4 (no operating
+Bare-metal Irem M92 and M90emulator for Raspberry Pi 3 and 4 (no operating
 system: Circle, AArch64), with the Irem M90 games too since 1.1.0. The
 front-end, video output, beam racing, COMPOSITE filter, pads and audio
 come from neo-pi; the M92 and M90 cores are new and reuse MAME's code
 wherever MAME has it.
 
-This file is for whoever carries on the work. For players: the site,
-<https://alessioscand.github.io/m92-pi/>, and `dist/sd/README.txt`
-(it goes on the SD card).
+This file is for whoever carries on the work. For players:
+<https://alessioscand.github.io/m92-pi/>
 
 m92-pi is a human-led, vibe-coded experiment by Alessio Scanderebech.
 If you like m92-pi, [neo-pi](https://alessioscand.github.io/neo-pi/) or
@@ -490,8 +489,6 @@ timing.
 
 ## 7. Credits
 
-- **Alessio Scanderebech**: idea, direction, design, testing on hardware.
-- **Claude** (Anthropic): code and documentation, written with Alessio.
 - **MAME** authors, among them Bryan McPhail, Alex W. Jackson, Acho A. Tang,
   R. Belmont and Valley Bell: NEC V33/V35 cores, M92 and M90 drivers, GA20, Irem
   decryption tables, 8259 (BSD 3-Clause).
@@ -504,5 +501,7 @@ timing.
 - **Shay Green** (blargg): snes_ntsc, the COMPOSITE filter (LGPL 2.1+).
 - **Rich Geldreich** and contributors: miniz (MIT).
 - **Damien Guard**: the ZX Origins fonts You Squared and Cyberwire.
+- **Alessio Scanderebech**: idea, direction, design, testing on hardware.
+- **Claude** (Anthropic): code and documentation, written with Alessio.
 
 Full licence texts: `dist/sd/LICENSES.txt`.
