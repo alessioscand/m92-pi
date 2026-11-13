@@ -3,17 +3,15 @@ m92-pi 1.1.0 - Bare-metal Irem M92 and M90 emulator for Raspberry Pi 3 and 4
 
 WHAT'S NEW IN 1.1.0
 
-  - Irem M90 games: Bomber Man / Dynablaster / Atomic Punk, Bomber Man
-    World / New Atomic Punk, Risky Challenge / Gussun Oyoyo. Up to 4
-    players in the Bomber Man games (Cabinet in DIP SWITCHES).
+  - Added support for Irem M90 games: Bomber Man / Dynablaster / Atomic
+    Punk, Bomber Man World / New Atomic Punk, Risky Challenge / Gussun
+    Oyoyo. Up to 4 players in the Bomber Man games.
   - Player 3 or 4 can now open the in-game menu and use it.
   - The EEPROM of Major Title 2 and The Irem Skins Game is written to
     the card only when it has changed.
-  - Every line of m92pi/list.txt gives the region too.
-  - DIP SWITCHES keeps the same size for every game, with arrows when
-    more switches are out of view.
-  - Setting up the controls: a function can be skipped by pressing a
-    button already assigned.
+  - UI optimizations.
+  - To skip a button during control mapping, press a button that has
+    already been assigned.
   - Fixed some bugs and aligned the code shared with the other projects
     (neo-pi, nes-pi).
   - To update a card, copy the new files over the old ones: games,
@@ -28,8 +26,8 @@ SET-UP
   3. Put your M92 and M90 games in the m92pi folder as MAME ROM sets, one
      .zip per set with MAME's file name (uccops.zip, hook.zip,
      dynablst.zip...). A clone also needs its parent's zip (uccopsj.zip
-     needs uccops.zip).
-     ROMs are identified by CRC, so sets from other MAME versions work.
+     needs uccops.zip). ROMs are identified by CRC, so sets from other
+     MAME versions work.
   4. Connect a USB gamepad and the display (on a Pi 4, HDMI 0, next to the
      power socket). Insert the card and switch on.
 
@@ -55,9 +53,9 @@ SETTING UP THE CONTROLS
 
   The first time a pad model is connected, the CONTROLS screen opens by
   itself. Press the button you want for each function, in this order: A,
-  B, C, D, E, F, SELECT/COIN, START. The games use A and B; C, D, E and F
-  are used only by Superior / Perfect Soldiers. After the last one, the
-  set-up is saved (SAVED).
+  B, C, D, E, F, SELECT/COIN, START. Every game uses only A and B, except
+  Superior / Perfect Soldiers, which also use C, D, E and F. After the
+  last one, the set-up is saved (SAVED).
 
   Directions need no set-up: the d-pad, hat and left stick always work. To
   skip a function, press a button already assigned: it stays unassigned
