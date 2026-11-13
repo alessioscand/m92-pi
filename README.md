@@ -1,15 +1,14 @@
 # m92-pi - Technical notes
 
-Bare-metal Irem M92 and M90emulator for Raspberry Pi 3 and 4 (no operating
-system: Circle, AArch64), with the Irem M90 games too since 1.1.0. The
-front-end, video output, beam racing, COMPOSITE filter, pads and audio
-come from neo-pi; the M92 and M90 cores are new and reuse MAME's code
-wherever MAME has it.
+Bare-metal Irem M92, M90 and M97 emulator for Raspberry Pi 3 and 4 (no operating
+system: Circle, AArch64). The front-end, video output, beam racing, COMPOSITE filter,
+pads and audio come from neo-pi; the M92 and M90/M97 cores are new and reuse MAME's
+code wherever MAME has it.
 
 This file is for whoever carries on the work. For players:
 <https://alessioscand.github.io/m92-pi/>
 
-m92-pi is a human-led, vibe-coded experiment by Alessio Scanderebech.
+**m92-pi** is a human-led, vibe-coded experiment by Alessio Scanderebech.  
 If you like m92-pi, [neo-pi](https://alessioscand.github.io/neo-pi/) or
 [nes-pi](https://alessioscand.github.io/nes-pi/), please consider
 supporting me: [paypal.me/alescandy](https://paypal.me/alescandy)
@@ -19,7 +18,7 @@ supporting me: [paypal.me/alescandy](https://paypal.me/alescandy)
 ## 1. Layout
 
 ```
-core/               the M92 and M90 machines (C++20, no Circle dependency)
+core/               the M92 and M90/M97 machines (C++20, no Circle dependency)
   emu.h             stand-in for MAME's emu.h (types, timers, address spaces, save states)
   endianness.h
   irem_machine.h/.cpp  what both machines share: scheduler, inputs, the interface m92_api uses,
@@ -29,7 +28,7 @@ core/               the M92 and M90 machines (C++20, no Circle dependency)
   m92_sound.h/.cpp  YM2151 + GA20, resampled and mixed to 48 kHz stereo
   m92_games.inc     GENERATED game tables (ROMs, DIPs, inputs, decryption, map type)
   m92_hiscore.inc   GENERATED hiscore rows (MAME's hiscore.dat)
-  m90.h/.cpp        the M90: memory maps, I/O, sound board (latch, RST buffer, sample DAC), save states
+  m90.h/.cpp        the M90/M97: memory maps, I/O, sound board (latch, RST buffer, sample DAC), save states
   m90_video.h/.cpp  GA25: two tile layers and sprites, one line at a time
   m90_sound.h/.cpp  YM2151 + 8-bit DAC, mixed to 48 kHz
   m90_games.inc     GENERATED game tables (ROMs, DIPs, inputs, decryption, visible area)
@@ -147,7 +146,7 @@ Reference sources used:
   `src/devices/sound/iremga20.cpp`, `src/devices/machine/pic8259.cpp`.
 - MiSTer `Arcade-IremM92` commit `68a4683` (`rtl/*.sv`, especially `palram.sv`,
   `GA21`, `GA22`).
-- For the M90 (see 3.10): MAME master at commit `adb51e2` (10 Nov 2026),
+- For the M90/M97 (see 3.10): MAME master at commit `adb51e2` (10 Nov 2026),
   `src/mame/irem/m90*.cpp`, `m72_a.cpp`; MiSTer `Arcade-IremM90` commit
   `185179f` (`rtl/m90.sv`, `ga25*.sv`, `sound.sv`).
 
@@ -281,13 +280,13 @@ three punches on the panel (bits 7-5) and three kicks on MAME's extra connector,
 read as the high byte of the players 3-4 port (player 1 bits 1-3, player 2
 bits 5-7), so the front-end writes them as player 4's byte.
 
-### 3.10 The M90 (`m90.cpp`, `m90_video.cpp`, `m90_sound.cpp`)
+### 3.10 The M90/M97 (`m90.cpp`, `m90_video.cpp`, `m90_sound.cpp`)
 
 Bomber Man / Dynablaster / Atomic Punk, Bomber Man World / New Atomic Punk,
 Risky Challenge / Gussun Oyoyo: 9 sets, 320x240, the same timing as the M92
 (424 x 262 at 6.67 MHz, 60.01 Hz), so the front-end needs nothing new. The
 machine is a second `irem_machine`; `m92_api` lists the M92 sets first, then
-the M90 ones.
+the M90/M97 ones.
 
 - **Main CPU**: NEC V35 at 16 MHz (divided by its PCK), opcodes decrypted with
   the game's Irem table (the same tables as the M92 sound CPUs). Vertical blank
