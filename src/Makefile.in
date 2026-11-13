@@ -5,7 +5,7 @@ CIRCLEHOME = @CIRCLEHOME@
 
 OBJS	= main.o kernel.o console.o games.o hiscore.o settings.o menus.o gameloop.o bench.o \
 	  report.o racing.o frame.o mcline.o \
-	  video.o ui.o fontdata.o fontlist.o ziphelp.o m92_sys.o \
+	  video.o crt.o ui.o fontdata.o fontlist.o ziphelp.o m92_sys.o \
 	  audio.o input.o raster.o race.o profile.o fbmap.o composite.o tvcore.o stats.o pacing.o miniz.o
 
 # The M92 core (C++20 with the standard library) is built apart, with its own

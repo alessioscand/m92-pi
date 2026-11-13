@@ -41,6 +41,8 @@ CKernel::CKernel (void)
 	m_CPUThrottle (CPUSpeedMaximum),
 	m_USBHCI (&m_Interrupt, &m_Timer, TRUE),
 	m_EMMC (&m_Interrupt, &m_Timer, &m_ActLED),
+	m_bCrt (CCrtOut::Detect ()),
+	m_Video (m_bCrt ? (CScreen &) m_Crt : (CScreen &) m_Hdmi),
 	m_pInput (0),
 	m_pUI (0),
 	m_bVideoOK (FALSE),
@@ -91,7 +93,7 @@ TShutdownMode CKernel::Run (void)
 {
 	if (!m_bVideoOK)
 	{
-		Fatal (PROJECT_ERR_FB, "cannot set up the HDMI output");
+		Fatal (PROJECT_ERR_FB, m_bCrt ? "cannot set up the CRT output" : "cannot set up the HDMI output");
 	}
 
 	char Line[180];
@@ -105,8 +107,8 @@ TShutdownMode CKernel::Run (void)
 		  pInfo->GetMachineName (), pInfo->GetRAMSize (),
 		  m_CPUThrottle.GetClockRate () / 1000000, m_CPUThrottle.GetTemperature ());
 	Log (Line, COLOR_TEXT);
-	snprintf (Line, sizeof Line, "HDMI %ux%u, pixel order %s", m_Video.GetWidth (), m_Video.GetHeight (),
-		  m_Video.GetPixelOrder () ? "RGB" : "BGR");
+	snprintf (Line, sizeof Line, "%s %ux%u, pixel order %s", m_bCrt ? "CRT (composite)" : "HDMI",
+		  m_Video.GetWidth (), m_Video.GetHeight (), m_Video.GetPixelOrder () ? "RGB" : "BGR");
 	Log (Line, COLOR_TEXT);
 
 	// SD card
@@ -128,6 +130,10 @@ TShutdownMode CKernel::Run (void)
 	if (!m_bFilterAllowed)
 	{
 		m_nFilter = FILTER_NONE;
+	}
+	if (m_bCrt)
+	{
+		m_bFilterAllowed = FALSE;	// a CRT has its own; the HDMI choice stays in the .cfg
 	}
 	StartCores ();
 
@@ -152,13 +158,23 @@ TShutdownMode CKernel::Run (void)
 	LoadPads ();
 	m_pInput->UpdateDevices ();
 
-	if (m_Audio.Initialize (&m_Interrupt))
+	// a CRT: the HDMI is off, the sound goes to the jack (PWM)
+#ifndef PROJECT_FAKEPAD
+	const boolean bJack = m_bCrt;
+#else
+	const boolean bJack = FALSE;		// QEMU has no PWM: it would hang
+#endif
+	const char *pAudio = bJack ? "Jack audio" : "HDMI audio";
+	char Msg[80];
+	if (m_Audio.Initialize (&m_Interrupt, bJack))
 	{
-		Log ("HDMI audio: OK (48 kHz)", COLOR_OK);
+		snprintf (Msg, sizeof Msg, "%s: OK (48 kHz)", pAudio);
+		Log (Msg, COLOR_OK);
 	}
 	else
 	{
-		Log ("HDMI audio: not available, playing without sound", COLOR_ERR);
+		snprintf (Msg, sizeof Msg, "%s: not available, playing without sound", pAudio);
+		Log (Msg, COLOR_ERR);
 	}
 
 	unsigned nSel = LastPlayed ();

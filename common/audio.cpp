@@ -1,12 +1,14 @@
 /*
- * HDMI audio output
+ * Audio output: HDMI, or the 3.5 mm jack (PWM) with a CRT
  *
  * About 800 stereo frames at 48 kHz arrive per emulated frame (from the
- * project's frame code). The display and the HDMI audio clock are not exactly locked, so
+ * project's frame code). The display and the audio clock are not exactly locked, so
  * the queue level is kept around TARGET by stretching or shrinking each block
  * by a few samples (linear interpolation, inaudible).
  */
 #include "audio.h"
+#include <circle/sound/hdmisoundbasedevice.h>
+#include <circle/sound/pwmsoundbasedevice.h>
 
 #define SAMPLE_RATE	48000
 #define CHUNK_SIZE	(384 * 2)		// words per DMA chunk (multiple of 384): 384 stereo frames = 8 ms
@@ -29,9 +31,16 @@ CAudioOut::~CAudioOut (void)
 	delete m_pSound;
 }
 
-boolean CAudioOut::Initialize (CInterruptSystem *pInterrupt)
+boolean CAudioOut::Initialize (CInterruptSystem *pInterrupt, boolean bJack)
 {
-	m_pSound = new CHDMISoundBaseDevice (pInterrupt, SAMPLE_RATE, CHUNK_SIZE);
+	if (bJack)
+	{
+		m_pSound = new CPWMSoundBaseDevice (pInterrupt, SAMPLE_RATE, CHUNK_SIZE);
+	}
+	else
+	{
+		m_pSound = new CHDMISoundBaseDevice (pInterrupt, SAMPLE_RATE, CHUNK_SIZE);
+	}
 	if (m_pSound == 0)
 	{
 		return FALSE;

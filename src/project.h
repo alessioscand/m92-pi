@@ -5,7 +5,7 @@
 #define PROJECT_H
 
 #define PROJECT_NAME	"m92-pi"
-#define PROJECT_VERSION	"1.1.0"
+#define PROJECT_VERSION	"1.2.0-crt1"
 
 /* The emulated picture */
 #define PROJECT_WIDTH	320

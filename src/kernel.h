@@ -26,6 +26,7 @@
 #include <circle/util.h>
 #include <stdint.h>
 #include "video.h"
+#include "crt.h"
 #include "input.h"
 #include "audio.h"
 #include "ui.h"
@@ -183,7 +184,10 @@ private:
 	CUSBHCIDevice		m_USBHCI;
 	CEMMCDevice		m_EMMC;
 	FATFS			m_FileSystem;
-	CVideoOut		m_Video;	// the screen (HDMI): used through CScreen only
+	const boolean		m_bCrt;		// composite (config.txt), decided at start-up
+	CVideoOut		m_Hdmi;
+	CCrtOut			m_Crt;
+	CScreen			&m_Video;	// the one in use: m_Hdmi or m_Crt
 	CAudioOut		m_Audio;
 	CInput			*m_pInput;
 	CUI			*m_pUI;

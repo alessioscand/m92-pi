@@ -206,8 +206,9 @@ void CKernel::RunSystemMenu (void)
 		}
 		Items[SmCpu].pValue = m_nCpuSpeed == CPU_TURBO ? "TURBO" : "NORMAL";
 		static const char *FilterLabels[FILTER_COUNT] = {"OFF", "LIGHT", "MEDIUM", "STRONG", "COMPOSITE"};
-		// not allowed only on a Pi 3 with multicore=off
-		Items[SmFilter].pValue = m_bFilterAllowed ? FilterLabels[m_nFilter] : "MULTICORE OFF";
+		// not allowed on a CRT, or on a Pi 3 with multicore=off
+		Items[SmFilter].pValue = m_bFilterAllowed ? FilterLabels[m_nFilter]
+					 : m_bCrt ? "CRT" : "MULTICORE OFF";
 		Items[SmFilter].bDisabled = !m_bFilterAllowed;
 
 		const char *pShow = pMsg;

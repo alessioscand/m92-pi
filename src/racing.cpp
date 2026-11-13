@@ -85,7 +85,18 @@ void CKernel::SetupBeamRacing (void)
 		return;
 	}
 	static char Report[600];
-	boolean bOK = g_Race.pRaster->Probe (m_Video.GetWidth (), m_Video.GetHeight (), Report, sizeof Report);
+	// a CRT: the firmware says 480 lines, the HVS channel may scan only 240
+	unsigned nLines = m_Video.GetHeight ();
+	boolean bOK = g_Race.pRaster->Probe (m_Video.GetWidth (), nLines, Report, sizeof Report);
+	if (!bOK && m_bCrt)
+	{
+		nLines = m_Video.GetFBHeight ();
+		bOK = g_Race.pRaster->Probe (m_Video.GetWidth (), nLines, Report, sizeof Report);
+	}
+	if (bOK && m_bCrt)
+	{
+		m_Crt.SetOutputLines (nLines);
+	}
 	// the report can be long: log it in pieces
 	for (const char *p = Report; *p; )
 	{

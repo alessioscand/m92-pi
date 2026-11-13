@@ -33,7 +33,7 @@ for P in $TARGETS; do
 	[ "$P" = "qemu" ] && CIRCLE="$ROOT/circle-qemumc"
 	sed "s|@CIRCLEHOME@|$CIRCLE|; s|@SRC@|$ROOT/src|g; s|@COMMON@|$ROOT/common|g; s|@CORE@|$ROOT/core|g; s|@THIRD@|$ROOT/third_party|g; s|@MINIZ@|$ROOT/third_party/miniz|; s|@NTSC@|$ROOT/third_party/snes_ntsc|" \
 		"$ROOT/src/Makefile.in" > "$B/Makefile"
-	[ "$P" = "qemu" ] && echo "DEFINE += -DPROJECT_FAKEPAD" >> "$B/Makefile"
+	[ "$P" = "qemu" ] && echo "DEFINE += -DPROJECT_FAKEPAD $QEMU_DEFINES" >> "$B/Makefile"
 	make -C "$B" -j16 libm92.a
 	make -C "$B" -j16
 done

@@ -40,3 +40,11 @@ max_framebuffers=2
 #arm_freq=1900
 
 [all]
+
+# CRT on the composite jack (NTSC 240p, the sound from the jack too):
+# remove the # in front of the five lines. HDMI is then off.
+#hdmi_force_hotplug=0
+#hdmi_ignore_hotplug=1
+#enable_tvout=1
+#sdtv_mode=16
+#sdtv_aspect=1
