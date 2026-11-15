@@ -235,23 +235,8 @@ void CKernel::StatePath (char *pOut, size_t nSize) const
 	GamePath (pOut, nSize, "st1");
 }
 
-// the EEPROM as the card holds it, so that an unchanged one is not written
-// again (size 0 = not known: the next save writes it)
-static u8 s_EepromOnCard[0x2000];		// m92_machine::m_eeprom
-static size_t s_nEepromOnCard = 0;
-
-static void RememberEeprom (const u8 *pEeprom, size_t nSize)
-{
-	s_nEepromOnCard = 0;
-	if (pEeprom && nSize <= sizeof s_EepromOnCard)
-	{
-		memcpy (s_EepromOnCard, pEeprom, nSize);
-		s_nEepromOnCard = nSize;
-	}
-}
-
-// save data of the loaded game: the hiscores, the EEPROM of Major Title 2 / Skins Game
-// (only if it changed)
+// the loaded game's save data (saves.cpp): the hiscores, the EEPROM of Major
+// Title 2 / Skins Game, only what changed
 void CKernel::SaveGameData (void)
 {
 	if (m_nLoaded < 0)
@@ -259,24 +244,7 @@ void CKernel::SaveGameData (void)
 		return;
 	}
 	HiSave ();
-	size_t nSize = 0;
-	u8 *pEeprom = m92_eeprom (&nSize);
-	if (pEeprom && (nSize != s_nEepromOnCard || memcmp (pEeprom, s_EepromOnCard, nSize) != 0))
-	{
-		char Path[160];
-		GamePath (Path, sizeof Path, "nv");
-		FIL File;
-		if (f_open (&File, Path, FA_WRITE | FA_CREATE_ALWAYS) == FR_OK)
-		{
-			UINT nWritten = 0;
-			f_write (&File, pEeprom, nSize, &nWritten);
-			f_close (&File);
-			if (nWritten == nSize)
-			{
-				RememberEeprom (pEeprom, nSize);
-			}
-		}
-	}
+	NvSave ();
 }
 
 void CKernel::UnloadGame (void)
@@ -430,28 +398,7 @@ boolean CKernel::LoadGame (unsigned nIndex)
 	McEnable (m_bMultiCore);
 	m92_set_cpu_speed ((int) m_nCpuSpeed);
 	LoadDips ();
-	size_t nSize = 0;
-	u8 *pEeprom = m92_eeprom (&nSize);
-	if (pEeprom)
-	{
-		char SavePath[160];
-		GamePath (SavePath, sizeof SavePath, "nv");
-		FIL File;
-		UINT nRead = 0;
-		if (f_open (&File, SavePath, FA_READ) == FR_OK)
-		{
-			f_read (&File, pEeprom, nSize, &nRead);
-			f_close (&File);
-		}
-		if (nRead == nSize)
-		{
-			RememberEeprom (pEeprom, nSize);
-		}
-		else
-		{
-			s_nEepromOnCard = 0;		// not on the card yet
-		}
-	}
+	NvStart ();		// before the reset: the board reads its EEPROM
 	m92_reset ();
 	HiStart ();
 

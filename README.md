@@ -333,7 +333,7 @@ Mostly neo-pi's, see neo-pi's `BUILD.md` for the shared parts.
 | `settings.cpp` | `m92pi.cfg`, the video mode it asks for, `pads.cfg` |
 | `games.cpp` | game list (`ScanGames`, `SplitMameName`), loading a set with its parent, save files, DIP switches (`LoadDips`) |
 | `gametable.cpp` | what the list and the border show of each set (short title, region, year, maker, the names of its buttons), written by hand |
-| `hiscore.cpp` | hiscores (`HiStart` / `HiTick` / `HiSave`) |
+| `saves.cpp` | hiscores (`HiStart` / `HiTick` / `HiSave`) and the EEPROM of Major Title 2 (`NvStart` / `NvSave`), with `common/hiscore.cpp` |
 | `menus.cpp` | game list, in-game menu, OPTIONS, DIP SWITCHES, CONTROLS, power off countdown, credits |
 | `gameloop.cpp` | `RunGame`: pads to the M92 panels, one emulated frame per screen frame, the in-game menu, the status line |
 | `frame.h/.cpp` | the emulated frame: picture and sound buffers, where the lines go (screen, core 1, COMPOSITE on core 2), cabinet voicing |
@@ -372,6 +372,7 @@ files; nothing else in the kernel changes.
 | `theme.h` | what `src/theme.cpp` gives `ui.cpp` and `video.cpp` |
 | `fonts.h`, `font_*.c` | the ZX Origins fonts: You Squared, Cyberwire, Matinee, Area51 (each project links its own) |
 | `gameinfo.h/.cpp` | the table's entry and `GameInfoFind` (the table: `src/gametable.cpp`) |
+| `hiscore.h/.cpp` | hiscores as MAME's plugin (`CHiscore`) and battery RAM or EEPROM (`CBatteryRam`), the core reached through a few functions |
 
 Buttons in `RunGame`: A and B are buttons 1 and 2, the only ones the games use.
 C D E F (buttons 3-6) are for Superior Soldiers / Perfect Soldiers only, as on
@@ -391,7 +392,8 @@ shows `SET  REGION`.
 Per-game files in `m92pi/saves/`: `<set>.dip` (`dsw=FFBE dsw3=FF`), `<set>.st1`
 (save state), `<set>.nv` (Major Title 2 EEPROM), `<set>.hi` (hiscores).
 
-Hiscores (`HiStart` / `HiTick` / `HiSave` in `hiscore.cpp`, rows in
+Hiscores (`HiStart` / `HiTick` / `HiSave` in `saves.cpp`, the work in
+`common/hiscore.cpp`, the same as s16-pi's; rows in
 `core/m92_hiscore.inc`) work as MAME's hiscore plugin: after each frame,
 once every row of the game's entry starts and ends with the expected bytes
 (the game has set its table up), `<set>.hi` is put over it; the table is

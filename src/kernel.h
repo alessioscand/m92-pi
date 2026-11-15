@@ -122,6 +122,8 @@ private:
 	void HiStop (void);
 	void HiTick (void);
 	void HiSave (void);
+	void NvStart (void);			// saves.cpp: the EEPROM
+	void NvSave (void);
 
 	// settings.cpp
 	static const char *FilterName (unsigned nFilter);
