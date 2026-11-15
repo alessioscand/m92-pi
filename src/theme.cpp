@@ -59,10 +59,15 @@ const TUITheme g_Theme =
 // dot in the middle of each square
 u32 ThemeGrid (int x, int y)
 {
-	const int mx = ((x % 20) + 20) % 20, my = ((y % 20) + 20) % 20;
-	if (mx == 0 || my == 0)
+	const int mx = x % 20, my = y % 20;
+	if (mx == 10 || my == 10)
 	{
 		return 0x103034;
 	}
-	return mx == 10 && my == 10 ? 0x164545 : 0x041015;
+	return mx == 0 && my == 0 ? 0x164545 : 0x041015;
+}
+
+u32 ThemeGround (void)
+{
+	return 0x041015;
 }
