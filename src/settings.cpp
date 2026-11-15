@@ -2,6 +2,8 @@
  * m92-pi - settings: m92pi.cfg, the video mode they ask for, pads.cfg
  */
 #include "kernel.h"
+#include "gameinfo.h"
+#include "m92_api.h"
 #include "frame.h"
 #include "pacing.h"
 #include "racing.h"
@@ -79,6 +81,7 @@ void CKernel::ApplyVideoMode (void)
 		  m_Video.GetHVSFactor (), m_Video.GetScale () / m_Video.GetHVSFactor (),
 		  FilterName (m_Video.GetFilter ()), m_bHVS ? "" : " (scaler=cpu)");
 	Log (Line, COLOR_TEXT);
+	UpdateBezel ();
 	snprintf (Line, sizeof Line, "Video: pixel order %s (%u), red in the %s byte%s",
 		  m_Video.GetPixelOrder () ? "RGB" : "BGR", m_Video.GetPixelOrder (),
 		  m_Video.IsRedLow () ? "low" : "high", "");
@@ -87,6 +90,39 @@ void CKernel::ApplyVideoMode (void)
 		  m_Video.GetWCPages () ? "on" : "FAILED",
 		  m_Video.GetWCPages ());
 	Log (Line, COLOR_TEXT);
+}
+
+// the border around the picture: with no game loaded always the grid; with
+// a game, OPTIONS > BEZEL, with the game's title, maker, year and buttons
+void CKernel::UpdateBezel (void)
+{
+	if (m_nLoaded < 0)
+	{
+		m_Video.SetBezel (BEZEL_GRID, 0, 0);
+		return;
+	}
+	static char Title[64], Maker[64];
+	const int nGame = m_pGames[m_nLoaded].nGame;
+	const TGameInfo *pInfo = GameInfoFind (m92_game_name (nGame));
+	snprintf (Title, sizeof Title, "%s", pInfo ? pInfo->pTitle : m_pGames[m_nLoaded].Name);
+	snprintf (Maker, sizeof Maker, "%s %s", pInfo ? pInfo->pMaker : m92_game_maker (nGame),
+		  pInfo ? pInfo->pYear : m92_game_year (nGame));
+	for (char *p = Title; *p; p++)
+	{
+		if (*p >= 'a' && *p <= 'z') *p = (char) (*p - 32);
+	}
+	for (char *p = Maker; *p; p++)
+	{
+		if (*p >= 'a' && *p <= 'z') *p = (char) (*p - 32);
+	}
+	CScreen::TBezelInfo Info;
+	Info.pTitle = Title;
+	Info.pMaker = Maker;
+	for (unsigned i = 0; i < 6; i++)
+	{
+		Info.pButtons[i] = pInfo ? pInfo->pButtons[i] : 0;
+	}
+	m_Video.SetBezel (m_nBezel, &Info, 1 + (unsigned) m_nLoaded);
 }
 
 // usbpoll= value for the log and m92pi.cfg
@@ -145,6 +181,10 @@ void CKernel::LoadConfig (void)
 	else if (strstr (Text, "filter=SCANLINES_STRONG"))	m_nFilter = FILTER_SCAN_STRONG;
 	else if (strstr (Text, "filter=SCANLINES"))		m_nFilter = FILTER_SCAN_MEDIUM;
 	if (strstr (Text, "scaler=cpu"))	m_bHVS = FALSE;
+	if (strstr (Text, "bezel=off"))			m_nBezel = 0;
+	else if (strstr (Text, "bezel=gridinfo"))	m_nBezel = BEZEL_GRID | BEZEL_INFO;
+	else if (strstr (Text, "bezel=grid"))		m_nBezel = BEZEL_GRID;
+	else if (strstr (Text, "bezel=info"))		m_nBezel = BEZEL_INFO;
 	// (multicore and the scanlines on a Pi 3: decided after LoadConfig, also
 	// when m92pi.cfg does not exist yet)
 	// USB pads are polled every 1 ms (like usbhid.jspoll=1 on Linux);
@@ -177,8 +217,8 @@ void CKernel::LoadConfig (void)
 	}
 
 	char Line[140];
-	snprintf (Line, sizeof Line, "Settings: CPU speed %s, filter %s, USB polling %s%s",
-		  m_nCpuSpeed == CPU_TURBO ? "turbo" : "normal", FilterName (m_nFilter),
+	snprintf (Line, sizeof Line, "Settings: CPU speed %s, filter %s, bezel %s, USB polling %s%s",
+		  m_nCpuSpeed == CPU_TURBO ? "turbo" : "normal", FilterName (m_nFilter), BezelName (m_nBezel, FALSE),
 		  UsbPollName (), g_nUSBInterruptPollMs ? " Hz" : "");
 	Log (Line, COLOR_TEXT);
 	char Delay[16];
@@ -197,6 +237,12 @@ void CKernel::SaveConfig (void)
 	snprintf (Text, sizeof Text, "cpu=%s\r\nfilter=%s\r\n%s",
 		  m_nCpuSpeed == CPU_TURBO ? "turbo" : "normal",
 		  FilterName (m_nFilter), m_bHVS ? "" : "scaler=cpu\r\n");
+	if (m_nBezel != (BEZEL_GRID | BEZEL_INFO))
+	{
+		strcat (Text, "bezel=");
+		strcat (Text, BezelName (m_nBezel, FALSE));
+		strcat (Text, "\r\n");
+	}
 	if (g_nUSBInterruptPollMs != 1)
 	{
 		strcat (Text, "usbpoll=");

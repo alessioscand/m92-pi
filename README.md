@@ -332,7 +332,7 @@ Mostly neo-pi's, see neo-pi's `BUILD.md` for the shared parts.
 | `console.cpp` | the start-up log on screen, serial and `LOG.TXT`; fatal errors |
 | `settings.cpp` | `m92pi.cfg`, the video mode it asks for, `pads.cfg` |
 | `games.cpp` | game list (`ScanGames`, `SplitMameName`), loading a set with its parent, save files, DIP switches (`LoadDips`) |
-| `gameinfo.cpp` | what the list shows of each set (short title, region, year, maker) and the names of its buttons, written by hand |
+| `gametable.cpp` | what the list and the border show of each set (short title, region, year, maker, the names of its buttons), written by hand |
 | `hiscore.cpp` | hiscores (`HiStart` / `HiTick` / `HiSave`) |
 | `menus.cpp` | game list, in-game menu, OPTIONS, DIP SWITCHES, CONTROLS, power off countdown, credits |
 | `gameloop.cpp` | `RunGame`: pads to the M92 panels, one emulated frame per screen frame, the in-game menu, the status line |
@@ -341,20 +341,18 @@ Mostly neo-pi's, see neo-pi's `BUILD.md` for the shared parts.
 | `report.cpp` | the per-minute report in `LOG.TXT` |
 | `bench.cpp` | BENCH and MCTEST |
 | `mcline.h/.cpp` | multicore line drawing: core 0 queues `(y, line_regs)` in a ring, core 1 draws; `McSync()` before VRAM/palette/sprites change; if core 1 stops answering for 0.5 s it falls back to single core and logs it |
-| `screen.h` | `CScreen`, the only interface the kernel draws through (game, menus, console) |
-| `video.h/.cpp` | `CVideoOut`, the HDMI `CScreen`: framebuffer, HVS / CPU integer scaling, scanlines, status line (bands or side columns) |
-| `ui.h/.cpp` | all screens, drawn at 304x224 in the middle of a 320x240 buffer; the logo (`s_Logo`, 88x15 drawn at 1x above the game list, 4 titles each side) and the palette (`ui.h`: petrol, white titles, cyan values like the logo's i) |
-| `fontdata.c` / `fontlist.c` | You Squared (menus, `g_MenuFont`) / Cyberwire (list, `g_ListFont`), ZX Origins |
+| `theme.cpp` | m92-pi's look for `common/ui.cpp` and the border: colours (petrol, white titles, cyan values like the logo's i), fonts, the logo (88x15), credits, the grid (`ThemeGrid`: the test crosshatch) |
 | `ziphelp.c` | zip reading and PNG writing (miniz) |
 | `m92_sys.c` | libc / libstdc++ stubs for the core |
 
-A CRT output on the composite jack would be another `CScreen`, in its own
-files, chosen in `kernel.h`; nothing else in the kernel changes.
-
 ### 4.2 `common/`
 
-Nothing M92 in it: it takes what it needs from `project.h`. The same files
-are in neo-pi and nes-pi, byte for byte.
+Nothing M92 in it: it takes what it needs from `project.h` and
+`src/theme.cpp`. The same files are in s16-pi and neo-pi, byte for byte (each
+project takes the newest at its release).
+
+A CRT output on the composite jack would be another `CScreen`, in its own
+files; nothing else in the kernel changes.
 
 | file | role |
 |---|---|
@@ -368,6 +366,12 @@ are in neo-pi and nes-pi, byte for byte.
 | `profile.cpp` | sampling profiler for the benchmark |
 | `pacing.h/.cpp` | frame phase (`PROJECT_PHASE_LINE`) and frame delay (`framedelay=`) when not racing |
 | `stats.h/.cpp` | timing statistics: histograms, averages, percentiles (`BENCH.TXT`, the per-minute log lines) |
+| `screen.h` | `CScreen`, the only interface the kernel draws through (game, menus, console, border, text beside the picture) |
+| `video.h/.cpp` | `CVideoOut`, the HDMI `CScreen`: framebuffer, HVS (at most 2x) / CPU integer scaling, scanlines, the border (BEZEL: black or the grid, with the game's title and buttons at 1080p), status line and messages in the side columns (Area51) |
+| `ui.h/.cpp` | all the menus, drawn at 304x224 in the middle of the picture: on every project the panels fall on the same pixels of the screen |
+| `theme.h` | what `src/theme.cpp` gives `ui.cpp` and `video.cpp` |
+| `fonts.h`, `font_*.c` | the ZX Origins fonts: You Squared, Cyberwire, Matinee, Area51 (each project links its own) |
+| `gameinfo.h/.cpp` | the table's entry and `GameInfoFind` (the table: `src/gametable.cpp`) |
 
 Buttons in `RunGame`: A and B are buttons 1 and 2, the only ones the games use.
 C D E F (buttons 3-6) are for Superior Soldiers / Perfect Soldiers only, as on
@@ -380,7 +384,7 @@ Cores: 0 = emulation + sound + main loop, 1 = M92 lines (`mcline`),
 2 = COMPOSITE (`tvcore`), 3 idle. `multicore=off` keeps everything on core 0.
 
 Game list: one entry per M92 MAME zip in `SD:/m92pi`. Display names from
-`src/gameinfo.cpp` (title and region), otherwise MAME's description
+`src/gametable.cpp` (title and region), otherwise MAME's description
 (`SplitMameName` drops " sound CPU", " M92 hardware", commas); the bottom line
 shows `SET  REGION`.
 

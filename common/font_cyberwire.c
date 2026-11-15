@@ -1,12 +1,13 @@
 /*
- * m92-pi - game list font: 8x8, characters 0x20-0x7F, bit 7 = left pixel.
  * "Cyberwire" from the ZX Origins collection by Damien Guard
- * (https://damieng.com/typography/zx-origins/), free for use in games
- * with credit. Characters it lacks (^ ` and 0x7F) come from the menu font.
+ * (https://damieng.com/typography/zx-origins/), free for use in games with
+ * credit. 8x8, characters 0x20-0x7F, bit 7 = left pixel.
+ * Game lists of m92-pi and s16-pi. Characters it lacks (^ ` and
+ * 0x7F) come from "You Squared".
  */
-#include "fontdata.h"
+#include "fonts.h"
 
-const unsigned char g_ListFont[96][8] =
+const unsigned char g_FontCyberwire[96][8] =
 {
 	{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},	//  
 	{0x38, 0x38, 0x38, 0x30, 0x00, 0x38, 0x38, 0x00},	// !

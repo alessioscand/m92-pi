@@ -7,9 +7,13 @@
 #define PROJECT_NAME	"m92-pi"
 #define PROJECT_VERSION	"1.1.0"
 
-/* The emulated picture */
+/* The emulated picture: the core hands over 320x240 lines, pitch 320 */
 #define PROJECT_WIDTH	320
 #define PROJECT_HEIGHT	240
+#define PROJECT_SRC_PITCH	320		/* the game's buffer */
+#define PROJECT_SRC_LINES	240
+#define PROJECT_SRC_X	0			/* the picture in it */
+#define PROJECT_SRC_Y	0
 
 /* TV filter (common/tvcore, common/composite): one line in (320 pixels
    0x00RRGGBB), the filtered line out (COMP_OUT_W) */

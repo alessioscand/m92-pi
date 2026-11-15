@@ -6,9 +6,8 @@
  * (SirPoonga, Howard Casto) and the games themselves.
  */
 #include "gameinfo.h"
-#include <string.h>
 
-static const TGameInfo s_Info[] =
+const TGameInfo g_GameInfo[] =
 {
 	{"atompunk", "Atomic Punk", "US", "1991", "Irem / Hudson Soft", {"Bomb", "Detonate"}},
 	{"bbmanw", "Bomber Man World", "World", "1992", "Irem", {"Bomb", "Detonate"}},
@@ -65,14 +64,4 @@ static const TGameInfo s_Info[] =
 	{"uccopsu", "Undercover Cops", "US", "1992", "Irem", {"Attack", "Jump"}},
 };
 
-const TGameInfo *GameInfoFind (const char *pSet)
-{
-	for (const TGameInfo &I : s_Info)
-	{
-		if (strcmp (I.pSet, pSet) == 0)
-		{
-			return &I;
-		}
-	}
-	return 0;
-}
+const unsigned g_nGameInfo = sizeof g_GameInfo / sizeof g_GameInfo[0];

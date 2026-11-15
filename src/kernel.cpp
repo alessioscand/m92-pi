@@ -63,6 +63,7 @@ CKernel::CKernel (void)
 	m_bHVS (TRUE),
 	m_bMultiCore (TRUE),
 	m_bFilterAllowed (TRUE),
+	m_nBezel (BEZEL_GRID | BEZEL_INFO),
 	m_bVSync (TRUE),
 	m_bStatusOn (FALSE),
 	m_nClearStatus (0)

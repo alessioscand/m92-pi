@@ -10,7 +10,7 @@
 #include "racing.h"
 #include "stats.h"
 #include "smp.h"
-#include "fontdata.h"
+#include "fonts.h"
 #include "m92_api.h"
 
 extern "C" {
@@ -95,6 +95,7 @@ static boolean LoadStateFile (const char *pPath)
 void CKernel::RunGame (void)
 {
 	PlayStart ();
+	UpdateBezel ();			// the title and the buttons around the picture
 	m_pInput->RestartDiagnostics ();		// log the pad reports of this game too
 	m_ActLED.On ();			// steady while playing (no firmware call every second)
 
@@ -335,16 +336,7 @@ void CKernel::PlayReadPanels (const u32 Pad[4], TPlayInput *pIn)
 			{
 				P.bLazy[p] = !P.bLazy[p];
 				const char *pOn = P.bLazy[p] ? "ON" : "OFF";
-				if (p == 0)
-				{
-					snprintf (P.Toast, sizeof P.Toast, "LAZY FINGER %s", pOn);
-					snprintf (P.ToastSide, sizeof P.ToastSide, "LAZY\nFINGER\n%s", pOn);
-				}
-				else
-				{
-					snprintf (P.Toast, sizeof P.Toast, "P%u LAZY FINGER %s", p + 1, pOn);
-					snprintf (P.ToastSide, sizeof P.ToastSide, "P%u\nLAZY\nFINGER\n%s", p + 1, pOn);
-				}
+				snprintf (P.Toast, sizeof P.Toast, "LAZY FINGER\nP%u %s", p + 1, pOn);
 				P.nToast = 60;
 				Log (P.bLazy[p] ? "  lazy finger on" : "  lazy finger off", COLOR_TEXT);
 			}
@@ -503,8 +495,7 @@ unsigned CKernel::PlayFrame (boolean bRace, boolean bScreenshot, unsigned *pT0, 
 		*pOddFrame = TRUE;
 		// the frame on screen, before emulating the next one
 		const char *pFile = SaveScreenshot ();
-		snprintf (P.Toast, sizeof P.Toast, pFile ? "SCREENSHOT SAVED  %s" : "SCREENSHOT FAILED", pFile);
-		snprintf (P.ToastSide, sizeof P.ToastSide, "SCREEN\nSHOT\n%s", pFile ? "SAVED" : "FAILED");
+		snprintf (P.Toast, sizeof P.Toast, pFile ? "SHOT SAVED" : "SHOT FAILED");
 		P.nToast = 60;
 	}
 	if (bRace)
@@ -680,81 +671,39 @@ boolean CKernel::PlayMenu (const u32 Pad[4])
 	return TRUE;
 }
 
-// the black bands (or side columns at 720p): status line and messages, only while playing
+// beside the picture, only while playing: the status line in the left
+// column, the messages in the right one
 void CKernel::PlayDrawBands (void)
 {
 	TPlay &P = m_Play;
-	const boolean bSide = m_Video.HasSideColumns ();	// fixed for the game
-	if (m_bStatusOn && !P.bMenu && P.bStatusReady && bSide)
+	if (m_bStatusOn && !P.bMenu && P.bStatusReady)
 	{
-		// left column, one item per line; "3X CPU+HVS" on two lines
-		const char *pScale = P.StScale[0] == ' ' ? P.StScale + 1 : P.StScale;
-		char Scale[16];
-		strcpy (Scale, pScale);
-		if (strlen (Scale) > 9)
-		{
-			char *pSp = strchr (Scale, ' ');
-			if (pSp) *pSp = '\n';
-		}
+		// "FPS 60", "LOAD 42%", "CPU 48°C", "RACE 3.2 MS", "1080P 4X CPU+HVS"
 		const CScreen::TTextSpan Spans[] =
 		{
-			{P.StFps, P.nFpsColor}, {"\nLOAD ", UI_GREY}, {P.StLoad, P.nLoadColor},
-			{"\n", UI_GREY}, {P.StTemp, P.nTempColor},
-			{g_Race.bGame ? "\nRACE " : "\nDLY ", UI_GREY}, {P.StDelay, UI_WHITE},
-			{"\n", UI_GREY}, {P.StRes, UI_WHITE}, {"\n", UI_GREY}, {Scale, UI_GREY}
+			{"FPS ", UI_GREY}, {P.StFps, P.nFpsColor}, {"\nLOAD ", UI_GREY}, {P.StLoad, P.nLoadColor},
+			{"\nCPU ", UI_GREY}, {P.StTemp, P.nTempColor},
+			{g_Race.bGame ? "\nRACE " : "\nDELAY ", UI_GREY}, {P.StDelay, UI_WHITE},
+			{"\n", UI_GREY}, {P.StRes, UI_GREY}, {P.StScale, UI_GREY}
 		};
 		m_Video.DrawSideText (FALSE, Spans, sizeof Spans / sizeof Spans[0]);
 		m_nClearStatus = 2;
 	}
-	else if (m_bStatusOn && !P.bMenu && P.bStatusReady)
-	{
-		const CScreen::TTextSpan Spans[] =
-		{
-			{P.StFps, P.nFpsColor}, {"   LOAD ", UI_GREY}, {P.StLoad, P.nLoadColor},
-			{"   ", UI_GREY}, {P.StTemp, P.nTempColor},
-			{g_Race.bGame ? "   RACE " : "   DLY ", UI_GREY}, {P.StDelay, UI_WHITE},
-			{"   ", UI_GREY}, {P.StRes, UI_WHITE}, {P.StScale, UI_GREY}
-		};
-		m_Video.DrawBandText (FALSE, Spans, sizeof Spans / sizeof Spans[0]);
-		m_nClearStatus = 2;
-	}
 	else if (m_nClearStatus)
 	{
-		if (bSide)
-		{
-			m_Video.DrawSideText (FALSE, 0, 0);
-		}
-		else
-		{
-			m_Video.DrawBandText (FALSE, 0, 0);
-		}
+		m_Video.DrawSideText (FALSE, 0, 0);
 		m_nClearStatus--;
 	}
 	if (P.nToast && !P.bMenu)
 	{
-		// side columns: the message on the right, one word per line
-		const CScreen::TTextSpan Span = {bSide ? P.ToastSide : P.Toast, UI_WHITE};
-		if (bSide)
-		{
-			m_Video.DrawSideText (TRUE, &Span, 1);
-		}
-		else
-		{
-			m_Video.DrawBandText (TRUE, &Span, 1);
-		}
+		const CScreen::TTextSpan Span = {P.Toast, UI_WHITE};
+		m_Video.DrawSideText (TRUE, &Span, 1);
 		P.nToast--;
 		P.nClearToast = 2;
 	}
 	else if (P.nClearToast)
 	{
-		if (bSide)
-		{
-			m_Video.DrawSideText (TRUE, 0, 0);
-		}
-		else
-		{
-			m_Video.DrawBandText (TRUE, 0, 0);
-		}
+		m_Video.DrawSideText (TRUE, 0, 0);
 		P.nClearToast--;
 	}
 }
@@ -775,9 +724,9 @@ void CKernel::PlayStatusLine (unsigned nNow, unsigned *pNextDeadline)
 	}
 
 	if (nFPS100 >= 5995)
-		snprintf (P.StFps, sizeof P.StFps, "%u FPS", (nFPS100 + 50) / 100);
+		snprintf (P.StFps, sizeof P.StFps, "%u", (nFPS100 + 50) / 100);
 	else
-		snprintf (P.StFps, sizeof P.StFps, "%u.%u FPS", nFPS100 / 100, (nFPS100 % 100) / 10);
+		snprintf (P.StFps, sizeof P.StFps, "%u.%u", nFPS100 / 100, (nFPS100 % 100) / 10);
 	P.nFpsColor = nFPS100 < 5990 ? UI_WARN : UI_WHITE;
 	unsigned nLoad = P.nWorkMax * 100 / 16667;
 	snprintf (P.StLoad, sizeof P.StLoad, "%u%%", nLoad);
@@ -791,7 +740,7 @@ void CKernel::PlayStatusLine (unsigned nNow, unsigned *pNextDeadline)
 	snprintf (P.StRes, sizeof P.StRes, "%uP", m_Video.GetHeight ());
 	unsigned us = g_Race.bGame ? (unsigned) g_Race.pRaster->TicksToUs ((s64) g_Race.pRacer->GetPadToPicture ())
 				   : g_Delay.nUs;
-	snprintf (P.StDelay, sizeof P.StDelay, "%u.%u", us / 1000, (us % 1000) / 100);
+	snprintf (P.StDelay, sizeof P.StDelay, "%u.%u MS", us / 1000, (us % 1000) / 100);
 	unsigned k = m_Video.GetHVSFactor (), S = m_Video.GetScale ();
 	snprintf (P.StScale, sizeof P.StScale, " %uX %s", S,
 		  k == S ? "HVS" : (k == 1 ? "CPU" : "CPU+HVS"));

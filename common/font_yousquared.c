@@ -1,12 +1,12 @@
 /*
- * m92-pi - menu font: 8x8, characters 0x20-0x7F, bit 7 = left pixel.
  * "You Squared" from the ZX Origins collection by Damien Guard
- * (https://damieng.com/typography/zx-origins/), free for use in games
- * with credit. Character 0x7F is replaced with a degree sign drawn for m92-pi.
+ * (https://damieng.com/typography/zx-origins/), free for use in games with
+ * credit. 8x8, characters 0x20-0x7F, bit 7 = left pixel.
+ * Menus of m92-pi and s16-pi. Character 0x7F is a degree sign.
  */
-#include "fontdata.h"
+#include "fonts.h"
 
-const unsigned char g_MenuFont[96][8] =
+const unsigned char g_FontYouSquared[96][8] =
 {
 	{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},	//  
 	{0x18, 0x18, 0x18, 0x18, 0x18, 0x00, 0x18, 0x00},	// !
