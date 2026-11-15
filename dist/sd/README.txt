@@ -1,19 +1,29 @@
-m92-pi 1.1.0 - Bare-metal Irem M92 and M90 emulator for Raspberry Pi 3 and 4
+m92-pi 1.2.0 - Bare-metal Irem M92 and M90 emulator for Raspberry Pi 3 and 4
 ============================================================================
 
-WHAT'S NEW IN 1.1.0
+WHAT'S NEW IN 1.2.0
 
-  - Added support for Irem M90 games: Bomber Man / Dynablaster / Atomic
-    Punk, Bomber Man World / New Atomic Punk, Risky Challenge / Gussun
-    Oyoyo. Up to 4 players in the Bomber Man games.
-  - Player 3 or 4 can now open the in-game menu and use it.
-  - The EEPROM of Major Title 2 and The Irem Skins Game is written to
-    the card only when it has changed.
-  - UI optimizations.
-  - To skip a button during control mapping, press a button that has
-    already been assigned.
-  - Fixed some bugs and aligned the code shared with the other projects
-    (neo-pi, nes-pi).
+  - New look, shared with s16-pi and neo-pi: dark grid behind the
+    menus, panels with a thick frame, the logo above the game list, the
+    MAME set and region at the bottom.
+  - OPTIONS > BEZEL: what is around the picture while playing.
+    GRID+INFO (default): the grid, and at 1080p the game's title, maker
+    and year above the picture and what its buttons do below. GRID: the
+    grid only. INFO: the texts on black. OFF: black. The border is
+    drawn once, never during play.
+  - Status line (Select + C) and messages beside the picture, in the
+    left and right columns, at 720p too. They are redrawn only when they
+    change: no more flickering lines.
+  - At 1080p the picture is scaled 2x by the CPU and 2x by the video
+    scaler, so that the texts around it are sharp.
+  - DIP SWITCHES: the panel is as tall as the game's switches (up to
+    10 rows, then the list scrolls, with arrows on the frame); under
+    it, where the selected switch is on the board (e.g. SW1:1,2).
+  - POWER OFF: only the countdown box, over the paused game.
+  - Game names, years and makers are built in: m92pi/list.txt is no
+    longer used.
+  - Hiscores and the EEPROM of Major Title 2 and The Irem Skins Game use
+    the same code as s16-pi.
   - To update a card, copy the new files over the old ones: games,
     saves, hiscores, settings and pads.cfg in m92pi are kept and work
     as before.
@@ -111,19 +121,26 @@ OPTIONS MENU (D in the game list, or from the in-game menu)
                 composite video connection of the time. Each line is
                 filtered as soon as it is drawn, on its own CPU core: no
                 added lag.
+  BEZEL         Around the picture while playing: GRID+INFO, GRID, INFO
+                or OFF (see WHAT'S NEW). In m92pi.cfg: bezel=gridinfo,
+                grid, info or off.
   CONTROLS      Set up a pad (with several pads, press a button on the one
                 to set up).
   POWER OFF     As in the in-game menu.
 
 STATUS LINE (Select + C)
 
-  Below the picture, or in the left black column at 720p:
+  In the left column, at the bottom, one item per line:
 
-    60 FPS   LOAD 62%   39 C   DLY 6.5   1080P 4X CPU+HVS
+    FPS 60
+    LOAD 62%
+    CPU 39 C
+    DELAY 6.5 MS
+    1080P 4X CPU+HVS
 
   - LOAD: how much of each frame is used (green; yellow from 75%; red
     above 95%).
-  - DLY: the frame delay in ms. With beam racing, RACE instead: the ms
+  - DELAY: the frame delay in ms. With beam racing, RACE instead: the ms
     from reading the pads to sending the top of the picture to the TV.
 
 LOW INPUT LAG
