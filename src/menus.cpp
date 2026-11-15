@@ -258,7 +258,7 @@ void CKernel::RunDipMenu (void)
 		return;
 	}
 	const int nGame = m_pGames[m_nLoaded].nGame;
-	enum { MaxItems = 24, Window = 10 };	// up to 10 on screen, the list scrolls
+	enum { MaxItems = 24, Window = 10 };	// the panel grows up to 10 rows, then the list scrolls
 	unsigned nSel = 0, nFirst = 0;
 	u32 nPrev = ~0u;
 	boolean bChanged = FALSE;
@@ -366,7 +366,7 @@ void CKernel::RunDipMenu (void)
 		// the arrows say that there are more switches above or below
 		static const TButtonHint Hints[2] = {{'A', "CHANGE"}, {'B', "BACK"}};
 		m_pUI->DrawPanelMenu (TRUE, "DIP SWITCHES", Items + nFirst, nShown, nSel - nFirst, pMsg, UI_VALUE,
-				      Hints, 2, S.pLocation, TRUE, Window, nFirst > 0, nFirst + nShown < nItems);
+				      Hints, 2, S.pLocation, TRUE, nItems < Window ? nItems : (unsigned) Window, nFirst > 0, nFirst + nShown < nItems);
 		ShowUIFrame ();
 	}
 
