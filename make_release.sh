@@ -28,7 +28,7 @@ for F in bootcode.bin start.elf start4.elf fixup.dat fixup4.dat armstub8-rpi4.bi
 done
 
 # configuration files in dist/sd
-for F in config.txt cmdline.txt README.txt LICENSES.txt m92pi/PUT_GAMES_HERE.txt m92pi/list.txt; do
+for F in config.txt cmdline.txt README.txt LICENSES.txt m92pi/PUT_GAMES_HERE.txt; do
 	[ -f "dist/sd/$F" ] || fail "dist/sd/$F missing"
 done
 grep -q "^m92-pi $VERSION " dist/sd/README.txt || fail "dist/sd/README.txt does not start with 'm92-pi $VERSION'"
@@ -42,7 +42,7 @@ rm -f "$STAGE"/kernel*.img
 cp "$K4" "$K3" "$STAGE/"
 # the m92pi folder ships with the placeholder and the names only: no games,
 # BENCH, logs, saves, screenshots or settings from a test card
-find "$STAGE/m92pi" -mindepth 1 ! -name PUT_GAMES_HERE.txt ! -name list.txt -exec rm -rf {} +
+find "$STAGE/m92pi" -mindepth 1 ! -name PUT_GAMES_HERE.txt -exec rm -rf {} +
 
 LEFT=$(find "$STAGE" -iname '*.zip' -o -iname 'BENCH*' -o -iname 'MCTEST*' -o -iname '*.cfg' \
 	-o -iname 'LOG.TXT' -o -iname 'LAST.TXT' -o -iname 'PROFILE.TXT')

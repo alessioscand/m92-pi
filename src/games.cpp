@@ -3,6 +3,7 @@
  * its save data and DIP switches
  */
 #include "kernel.h"
+#include "gameinfo.h"
 #include "mcline.h"
 #include "m92_api.h"
 #include <circle/new.h>
@@ -97,39 +98,6 @@ static void ZipBase (const char *pFile, char *pOut, size_t nSize)
 }
 
 
-// m92pi/list.txt: "set=Title" or "set=Title|Region" per line. Fills pTitle
-// and pRegion (both may stay empty) for one set; FALSE if the set is not listed
-static boolean ListLookup (const char *pList, const char *pSet, char *pTitle, size_t nTitle,
-			   char *pRegion, size_t nRegion)
-{
-	size_t nSet = strlen (pSet);
-	for (const char *p = pList; p && *p; )
-	{
-		const char *pEnd = strchr (p, '\n');
-		size_t nLine = pEnd ? (size_t) (pEnd - p) : strlen (p);
-		if (nLine > nSet && strncmp (p, pSet, nSet) == 0 && p[nSet] == '=')
-		{
-			const char *t = p + nSet + 1, *e = p + nLine;
-			while (e > t && (e[-1] == '\r' || e[-1] == ' ')) e--;
-			const char *bar = t;
-			while (bar < e && *bar != '|') bar++;
-			size_t n = (size_t) (bar - t) < nTitle - 1 ? (size_t) (bar - t) : nTitle - 1;
-			memcpy (pTitle, t, n);
-			pTitle[n] = '\0';
-			pRegion[0] = '\0';
-			if (bar < e)
-			{
-				n = (size_t) (e - bar - 1) < nRegion - 1 ? (size_t) (e - bar - 1) : nRegion - 1;
-				memcpy (pRegion, bar + 1, n);
-				pRegion[n] = '\0';
-			}
-			return TRUE;
-		}
-		p = pEnd ? pEnd + 1 : 0;
-	}
-	return FALSE;
-}
-
 // MAME's name split in title and region: "Hook (Japan)" -> "Hook", "JAPAN";
 // the region loses "sound CPU", "M92 hardware" and the commas
 static void SplitMameName (const char *pDesc, char *pTitle, size_t nTitle, char *pRegion, size_t nRegion)
@@ -168,20 +136,6 @@ static void SplitMameName (const char *pDesc, char *pTitle, size_t nTitle, char 
 
 void CKernel::ScanGames (void)
 {
-	// names for the list (optional)
-	static char ListTxt[8192];
-	ListTxt[0] = '\0';
-	{
-		FIL File;
-		UINT nRead = 0;
-		if (f_open (&File, M92PI_DIR "/list.txt", FA_READ) == FR_OK)
-		{
-			f_read (&File, ListTxt, sizeof ListTxt - 1, &nRead);
-			f_close (&File);
-			ListTxt[nRead] = '\0';
-		}
-	}
-
 	m_pGames = new TGameEntry[MaxGames];
 	m_nGames = 0;
 
@@ -231,9 +185,13 @@ void CKernel::ScanGames (void)
 		strcpy (G.File, Info.fname);
 		char Title[64], Region[32], MameTitle[64], MameRegion[32];
 		SplitMameName (m92_game_desc (nGame), MameTitle, sizeof MameTitle, MameRegion, sizeof MameRegion);
-		if (ListLookup (ListTxt, Base, Title, sizeof Title, Region, sizeof Region))
+		const TGameInfo *pInfo = GameInfoFind (Base);	// gameinfo.cpp
+		if (pInfo)
 		{
-			if (!Region[0]) strcpy (Region, MameRegion);
+			strncpy (Title, pInfo->pTitle, sizeof Title - 1);
+			Title[sizeof Title - 1] = '\0';
+			strncpy (Region, pInfo->pRegion[0] ? pInfo->pRegion : MameRegion, sizeof Region - 1);
+			Region[sizeof Region - 1] = '\0';
 		}
 		else
 		{

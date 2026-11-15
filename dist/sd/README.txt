@@ -38,8 +38,6 @@ START-UP
     at once. GAME LIST in the in-game menu still opens the list.
   - Game list: Up/Down to choose, Left/Right to jump by 8, A or Start to
     play, D for OPTIONS. Bottom left: the MAME set name and region.
-  - Names in the list: m92pi/list.txt, one line per set, as
-    set=Title|Region. Sets not listed there use MAME's name and region.
   - Benchmark: an empty file named m92pi/BENCH (no extension) runs one on
     the selected game before normal play: 30 seconds of the game's demo,
     then 60 seconds measured. Do not touch anything. Results in
@@ -170,7 +168,6 @@ TESTING OPTIONS (in m92pi/m92pi.cfg, one per line)
 
 FILES ON THE CARD (m92pi folder)
 
-  list.txt       Names shown in the game list
   LOG.TXT        Diagnostics: model, HDMI, pads, audio, per-minute
                  timings. Updated when the menu opens, when the game
                  changes and at power-off

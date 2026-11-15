@@ -124,8 +124,8 @@ are (`-w`, headers through `-isystem`). The build must stay free of warnings.
 `make_release.sh` checks that both kernels contain `PROJECT_VERSION` and are
 newer than `src/project.h`, that the firmware (`third_party/rpi-firmware/`) and the card
 files (`dist/sd/`) are there, that `README.txt` starts with `m92-pi <version>`, and leaves out
-of the zip anything in `dist/sd/m92pi/` except `PUT_GAMES_HERE.txt` and
-`list.txt` (games, saves, `BENCH`, logs, settings).
+of the zip anything in `dist/sd/m92pi/` except `PUT_GAMES_HERE.txt` (games,
+saves, `BENCH`, logs, settings).
 GitHub release: tag `v<version>`, asset `m92-pi-<version>-sd.zip`.
 
 ## 3. The core
@@ -331,7 +331,8 @@ Mostly neo-pi's, see neo-pi's `BUILD.md` for the shared parts.
 | `kernel.h`, `kernel.cpp` | the kernel class; start-up, starting cores 1 and 2, the main flow (list, game, list...), power off |
 | `console.cpp` | the start-up log on screen, serial and `LOG.TXT`; fatal errors |
 | `settings.cpp` | `m92pi.cfg`, the video mode it asks for, `pads.cfg` |
-| `games.cpp` | game list (`ScanGames`, `list.txt`, `SplitMameName`), loading a set with its parent, save files, DIP switches (`LoadDips`) |
+| `games.cpp` | game list (`ScanGames`, `SplitMameName`), loading a set with its parent, save files, DIP switches (`LoadDips`) |
+| `gameinfo.cpp` | what the list shows of each set (short title, region, year, maker) and the names of its buttons, written by hand |
 | `hiscore.cpp` | hiscores (`HiStart` / `HiTick` / `HiSave`) |
 | `menus.cpp` | game list, in-game menu, OPTIONS, DIP SWITCHES, CONTROLS, power off countdown, credits |
 | `gameloop.cpp` | `RunGame`: pads to the M92 panels, one emulated frame per screen frame, the in-game menu, the status line |
@@ -379,7 +380,7 @@ Cores: 0 = emulation + sound + main loop, 1 = M92 lines (`mcline`),
 2 = COMPOSITE (`tvcore`), 3 idle. `multicore=off` keeps everything on core 0.
 
 Game list: one entry per M92 MAME zip in `SD:/m92pi`. Display names from
-`m92pi/list.txt` (`set=Title|Region`), otherwise MAME's description
+`src/gameinfo.cpp` (title and region), otherwise MAME's description
 (`SplitMameName` drops " sound CPU", " M92 hardware", commas); the bottom line
 shows `SET  REGION`.
 
