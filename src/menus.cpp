@@ -366,7 +366,7 @@ void CKernel::RunDipMenu (void)
 		// the arrows say that there are more switches above or below
 		static const TButtonHint Hints[2] = {{'A', "CHANGE"}, {'B', "BACK"}};
 		m_pUI->DrawPanelMenu (TRUE, "DIP SWITCHES", Items + nFirst, nShown, nSel - nFirst, pMsg, UI_VALUE,
-				      Hints, 2, S.pLocation, Window, nFirst > 0, nFirst + nShown < nItems);
+				      Hints, 2, S.pLocation, TRUE, Window, nFirst > 0, nFirst + nShown < nItems);
 		ShowUIFrame ();
 	}
 
