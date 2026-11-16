@@ -54,7 +54,9 @@ const TUITheme g_Theme =
 	0x37D6D6, TRUE,				// the list's bottom row: value, list font
 	s_Logo, sizeof s_Logo / sizeof s_Logo[0], 1, s_LogoKeys, s_LogoColors,
 	s_Credits, sizeof s_Credits / sizeof s_Credits[0],
-	"IREM IS A TRADEMARK", "OF ITS OWNER."
+	"IREM IS A TRADEMARK", "OF ITS OWNER.",
+	{0, 0}, 0, 0,				// no frame: the grid's dither
+	{4, 3}					// the columns' text a little further out
 };
 
 // the grid: a monitor test crosshatch at 75%, lines every 20 pixels and a
