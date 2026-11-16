@@ -47,7 +47,8 @@ START-UP
   - With only one game in m92pi, the list is skipped and the game starts
     at once. GAME LIST in the in-game menu still opens the list.
   - Game list: Up/Down to choose, Left/Right to jump by 8, A or Start to
-    play, D for OPTIONS. Bottom left: the MAME set name and region.
+    play, D for OPTIONS. A long title scrolls. Bottom left: the MAME set
+    name and region. With no pad connected, NO PAD on the left.
   - Benchmark: an empty file named m92pi/BENCH (no extension) runs one on
     the selected game before normal play: 30 seconds of the game's demo,
     then 60 seconds measured. Do not touch anything. Results in
@@ -83,7 +84,8 @@ CONTROLS IN GAME
   Select held 1 second      In-game menu (the game pauses)
   Select + A                Screenshot: m92pi/shots/<game>_NNN.png
   Select + B                Lazy finger on/off: held, A to F fire
-                            repeatedly (per player)
+                            repeatedly (per player, off at every game
+                            start)
   Select + C                Status line on/off
   Select + D                Credits (B closes them)
 
@@ -120,7 +122,9 @@ OPTIONS MENU (D in the game list, or from the in-game menu)
                 scanlines: blargg's NTSC filter gives the look of a
                 composite video connection of the time. Each line is
                 filtered as soon as it is drawn, on its own CPU core: no
-                added lag.
+                added lag. On a Pi 3 the scanlines and COMPOSITE need
+                multicore: with multicore=off this item shows MULTICORE
+                OFF.
   BEZEL         Around the picture while playing: GRID+INFO, GRID, INFO
                 or OFF (see WHAT'S NEW). In m92pi.cfg: bezel=gridinfo,
                 grid, info or off.
@@ -130,18 +134,23 @@ OPTIONS MENU (D in the game list, or from the in-game menu)
 
 STATUS LINE (Select + C)
 
-  In the left column, at the bottom, one item per line:
+  In the left column, at the bottom:
 
     FPS 60
     LOAD 62%
-    CPU 39 C
-    DELAY 6.5 MS
-    1080P 4X CPU+HVS
+    CPU 39
+    RCE 1.4
+    1080P 4X
+    CPU+HVS
 
   - LOAD: how much of each frame is used (green; yellow from 75%; red
-    above 95%).
-  - DELAY: the frame delay in ms. With beam racing, RACE instead: the ms
-    from reading the pads to sending the top of the picture to the TV.
+    above 95%; shown up to 99%).
+  - CPU: the processor's temperature, in degrees C.
+  - RCE: with beam racing, the ms from reading the pads to sending the
+    top of the picture to the TV. Without it DLY instead: the frame
+    delay in ms.
+  - The video mode and how the picture is scaled: by the CPU, by the
+    video scaler (HVS) or by both.
 
 LOW INPUT LAG
 
