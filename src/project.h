@@ -29,6 +29,11 @@
 /* Each emulated frame starts here: the first line after the picture */
 #define PROJECT_PHASE_LINE	248
 
+/* Audio queue (common/audio.cpp): ~1 video frame (~17 ms) instead of 2,
+   less audio lag; the sound is made a line at a time (core/m92.cpp) */
+#define PROJECT_AUDIO_TARGET	800
+#define PROJECT_AUDIO_BAND	200
+
 /* Error codes = number of green LED blinks when the screen is unusable */
 #define PROJECT_ERR_FB    2   /* framebuffer / HDMI */
 #define PROJECT_ERR_SD    3   /* SD card or FAT filesystem */

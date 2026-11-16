@@ -440,6 +440,11 @@ void m92_machine::scanline(s32)
 	const int line = m_line;
 	m_line = (m_line + 1) % VTOTAL;
 
+	// the sound up to now, a line at a time: the same samples as in bigger
+	// blocks (at the YM2151's timers, about every 4 ms), but the work is
+	// spread evenly over the frame instead of stalling a few lines
+	m_sound->update();
+
 	if (m_line_hook)
 		m_line_hook(line);
 
