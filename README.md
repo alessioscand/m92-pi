@@ -236,6 +236,11 @@ IRQ lines as MAME's driver: 0 vblank, 1 sprite DMA end, 2 raster, 3 sound latch 
   the Pi, `FrameTakeAudio` in `src/frame.cpp` then applies the cabinet voicing, always
   on: low shelf +4 dB below 120 Hz and 2nd-order low-pass at 8 kHz (RBJ biquads,
   float, one sample at a time, no latency), -0.5 dB to keep the loudness.
+- The sound is brought up to date at every line (`m92_machine::scanline`), not
+  only at the YM2151's timers (about every 4 ms): the same samples, but the
+  work is spread over the frame instead of stalling a few lines, which beam
+  racing feels. So the audio queue can be one video frame instead of two
+  (`PROJECT_AUDIO_TARGET` in `src/project.h`): ~17 ms of audio lag, not ~33.
 
 ### 3.8 Game tables (`tools/gen_m92_tables.py`)
 
@@ -367,10 +372,10 @@ files; nothing else in the kernel changes.
 | `pacing.h/.cpp` | frame phase (`PROJECT_PHASE_LINE`) and frame delay (`framedelay=`) when not racing |
 | `stats.h/.cpp` | timing statistics: histograms, averages, percentiles (`BENCH.TXT`, the per-minute log lines) |
 | `screen.h` | `CScreen`, the only interface the kernel draws through (game, menus, console, border, text beside the picture) |
-| `video.h/.cpp` | `CVideoOut`, the HDMI `CScreen`: framebuffer, HVS (at most 2x) / CPU integer scaling, scanlines, the border (BEZEL: black or the grid, with the game's title and buttons at 1080p), status line and messages in the side columns (Lander) |
+| `video.h/.cpp` | `CVideoOut`, the HDMI `CScreen`: framebuffer, HVS (at most 2x) / CPU integer scaling, scanlines, the border (BEZEL: black or the grid, with the game's title and buttons at 1080p), status line and messages in the side columns (You Squared) |
 | `ui.h/.cpp` | all the menus, drawn at 304x224 in the middle of the picture: on every project the panels fall on the same pixels of the screen |
 | `theme.h` | what `src/theme.cpp` gives `ui.cpp` and `video.cpp` |
-| `fonts.h`, `font_*.c` | the ZX Origins fonts: You Squared, Cyberwire, Matinee, Lander (each project links its own) |
+| `fonts.h`, `font_*.c` | the ZX Origins fonts: You Squared, Cyberwire, Matinee (each project links its own) |
 | `gameinfo.h/.cpp` | the table's entry and `GameInfoFind` (the table: `src/gametable.cpp`) |
 | `hiscore.h/.cpp` | hiscores as MAME's plugin (`CHiscore`) and battery RAM or EEPROM (`CBatteryRam`), the core reached through a few functions |
 
