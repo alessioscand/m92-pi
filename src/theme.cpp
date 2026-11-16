@@ -50,6 +50,8 @@ const TUITheme g_Theme =
 	0xF8F8F8, 0x37D6D6, 0x96A8AB,		// title, value, dim
 	0xFF5050,				// POWER OFF
 	g_FontYouSquared, g_FontCyberwire, FALSE,
+	g_FontLander,				// around the picture
+	0x37D6D6, TRUE,				// the list's bottom row: value, list font
 	s_Logo, sizeof s_Logo / sizeof s_Logo[0], 1, s_LogoKeys, s_LogoColors,
 	s_Credits, sizeof s_Credits / sizeof s_Credits[0],
 	"IREM IS A TRADEMARK", "OF ITS OWNER."

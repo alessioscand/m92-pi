@@ -372,10 +372,10 @@ files; nothing else in the kernel changes.
 | `pacing.h/.cpp` | frame phase (`PROJECT_PHASE_LINE`) and frame delay (`framedelay=`) when not racing |
 | `stats.h/.cpp` | timing statistics: histograms, averages, percentiles (`BENCH.TXT`, the per-minute log lines) |
 | `screen.h` | `CScreen`, the only interface the kernel draws through (game, menus, console, border, text beside the picture) |
-| `video.h/.cpp` | `CVideoOut`, the HDMI `CScreen`: framebuffer, HVS (at most 2x) / CPU integer scaling, scanlines, the border (BEZEL: black or the grid, with the game's title and buttons at 1080p), status line and messages in the side columns (You Squared) |
+| `video.h/.cpp` | `CVideoOut`, the HDMI `CScreen`: framebuffer, HVS (at most 2x) / CPU integer scaling, scanlines, the border (BEZEL: black or the grid, with the game's title and buttons at 1080p), status line and messages in the side columns (in the theme's font: Lander here) |
 | `ui.h/.cpp` | all the menus, drawn at 304x224 in the middle of the picture: on every project the panels fall on the same pixels of the screen |
 | `theme.h` | what `src/theme.cpp` gives `ui.cpp` and `video.cpp` |
-| `fonts.h`, `font_*.c` | the ZX Origins fonts: You Squared, Cyberwire, Matinee (each project links its own) |
+| `fonts.h`, `font_*.c` | the ZX Origins fonts: You Squared, Cyberwire, Lander, Matinee (each project links its own) |
 | `gameinfo.h/.cpp` | the table's entry and `GameInfoFind` (the table: `src/gametable.cpp`) |
 | `hiscore.h/.cpp` | hiscores as MAME's plugin (`CHiscore`) and battery RAM or EEPROM (`CBatteryRam`), the core reached through a few functions |
 
