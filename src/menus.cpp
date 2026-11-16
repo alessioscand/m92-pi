@@ -108,6 +108,16 @@ void CKernel::RunSystemMenu (void)
 {
 	enum { SmCpu, SmFilter, SmBezel, SmControls, SmPower, SmCount };
 
+	// the items shown: on a CRT no filter and no border
+	unsigned Shown[SmCount], nShown = 0;
+	for (unsigned i = 0; i < SmCount; i++)
+	{
+		if (!(m_bCrt && (i == SmFilter || i == SmBezel)))
+		{
+			Shown[nShown++] = i;
+		}
+	}
+
 	unsigned nSel = 0;
 	u32 nPrev = ~0u;
 	unsigned nOldCpu = m_nCpuSpeed, nOldFilter = m_nFilter, nOldBezel = m_nBezel;
@@ -140,13 +150,13 @@ void CKernel::RunSystemMenu (void)
 		u32 nNew = nPrev == ~0u ? 0 : (n & ~nPrev);
 		nPrev = n;
 
-		if (nNew & BTN_UP)	{ nSel = (nSel + SmCount - 1) % SmCount; pMsg = ""; }
-		if (nNew & BTN_DOWN)	{ nSel = (nSel + 1) % SmCount; pMsg = ""; }
+		if (nNew & BTN_UP)	{ nSel = (nSel + nShown - 1) % nShown; pMsg = ""; }
+		if (nNew & BTN_DOWN)	{ nSel = (nSel + 1) % nShown; pMsg = ""; }
 		int nDir = (nNew & (BTN_A | BTN_RIGHT)) ? 1 : ((nNew & BTN_LEFT) ? -1 : 0);
 
 		if (nDir != 0)
 		{
-			switch (nSel)
+			switch (Shown[nSel])
 			{
 			case SmCpu:
 				// the main CPU as on the board, or faster against the slowdowns
@@ -222,7 +232,7 @@ void CKernel::RunSystemMenu (void)
 
 		const char *pShow = pMsg;
 		u32 nShowColor = UI_VALUE;
-		if (!pShow[0] && nSel == SmCpu)
+		if (!pShow[0] && Shown[nSel] == SmCpu)
 		{
 			pShow = m_nCpuSpeed == CPU_TURBO ? "FEWER SLOWDOWNS" : "AS THE ARCADE BOARD";
 		}
@@ -231,7 +241,12 @@ void CKernel::RunSystemMenu (void)
 			nShowColor = UI_ERR;
 		}
 		static const TButtonHint Hints[2] = {{'A', "CHANGE"}, {'B', "BACK"}};
-		m_pUI->DrawPanelMenu (m_nLoaded >= 0, "OPTIONS", Items, SmCount, nSel, pShow, nShowColor,
+		TMenuItem ShownItems[SmCount];
+		for (unsigned i = 0; i < nShown; i++)
+		{
+			ShownItems[i] = Items[Shown[i]];
+		}
+		m_pUI->DrawPanelMenu (m_nLoaded >= 0, "OPTIONS", ShownItems, nShown, nSel, pShow, nShowColor,
 				      Hints, 2, Footer);
 		ShowUIFrame ();
 	}

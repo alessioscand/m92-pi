@@ -49,6 +49,21 @@ void CKernel::VideoModeTag (char *pOut, size_t nSize)
 
 void CKernel::ApplyVideoMode (void)
 {
+	if (m_bCrt)
+	{
+		// the picture only: no filter (m_nFilter stays in the .cfg for HDMI)
+		FrameSetComposite (FALSE);
+		if (!m_Video.SetGameMode (FILTER_NONE, TRUE))
+		{
+			Fatal (PROJECT_ERR_FB, "cannot set up the game framebuffer");
+		}
+		char Line[MaxLineLen];
+		snprintf (Line, sizeof Line, "Video: CRT %ux%u, framebuffer %ux%u, game at %u,%u, no filter",
+			  m_Video.GetWidth (), m_Video.GetHeight (), m_Video.GetFBWidth (),
+			  m_Video.GetFBHeight (), (m_Video.GetFBWidth () - GAME_W) / 2, m_Video.GetGameY ());
+		Log (Line, COLOR_TEXT);
+		return;
+	}
 	if (m_nFilter == FILTER_COMPOSITE && !TvReady ())
 	{
 		// the filter's tables, built the first time COMPOSITE is used

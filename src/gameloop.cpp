@@ -340,7 +340,7 @@ void CKernel::PlayReadPanels (const u32 Pad[4], TPlayInput *pIn)
 				P.nToast = 60;
 				Log (P.bLazy[p] ? "  lazy finger on" : "  lazy finger off", COLOR_TEXT);
 			}
-			if (nNew & BTN_C)
+			if ((nNew & BTN_C) && !m_bCrt)		// no status line on a CRT
 			{
 				m_bStatusOn = !m_bStatusOn;
 				m_nClearStatus = 2;

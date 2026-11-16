@@ -1,10 +1,11 @@
 /*
- * HDMI audio output with a small queue and drift correction
+ * Audio output (HDMI, or the jack for a CRT) with a small queue and drift
+ * correction
  */
 #ifndef AUDIO_H
 #define AUDIO_H
 
-#include <circle/sound/hdmisoundbasedevice.h>
+#include <circle/sound/soundbasedevice.h>
 #include <circle/interrupt.h>
 #include <circle/types.h>
 
@@ -14,7 +15,8 @@ public:
 	CAudioOut (void);
 	~CAudioOut (void);
 
-	boolean Initialize (CInterruptSystem *pInterrupt);
+	// bJack: the 3.5 mm jack (PWM) instead of HDMI
+	boolean Initialize (CInterruptSystem *pInterrupt, boolean bJack = FALSE);
 	boolean IsOK (void) const	{ return m_bOK; }
 
 	// Queue one emulated frame of interleaved stereo samples
@@ -25,7 +27,7 @@ public:
 		       int *pAdjust);
 
 private:
-	CHDMISoundBaseDevice *m_pSound;
+	CSoundBaseDevice *m_pSound;
 	boolean	 m_bOK;
 	s16	 m_Buffer[4096];
 
