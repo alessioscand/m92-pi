@@ -367,10 +367,10 @@ files; nothing else in the kernel changes.
 | `pacing.h/.cpp` | frame phase (`PROJECT_PHASE_LINE`) and frame delay (`framedelay=`) when not racing |
 | `stats.h/.cpp` | timing statistics: histograms, averages, percentiles (`BENCH.TXT`, the per-minute log lines) |
 | `screen.h` | `CScreen`, the only interface the kernel draws through (game, menus, console, border, text beside the picture) |
-| `video.h/.cpp` | `CVideoOut`, the HDMI `CScreen`: framebuffer, HVS (at most 2x) / CPU integer scaling, scanlines, the border (BEZEL: black or the grid, with the game's title and buttons at 1080p), status line and messages in the side columns (Area51) |
+| `video.h/.cpp` | `CVideoOut`, the HDMI `CScreen`: framebuffer, HVS (at most 2x) / CPU integer scaling, scanlines, the border (BEZEL: black or the grid, with the game's title and buttons at 1080p), status line and messages in the side columns (Lander) |
 | `ui.h/.cpp` | all the menus, drawn at 304x224 in the middle of the picture: on every project the panels fall on the same pixels of the screen |
 | `theme.h` | what `src/theme.cpp` gives `ui.cpp` and `video.cpp` |
-| `fonts.h`, `font_*.c` | the ZX Origins fonts: You Squared, Cyberwire, Matinee, Area51 (each project links its own) |
+| `fonts.h`, `font_*.c` | the ZX Origins fonts: You Squared, Cyberwire, Matinee, Lander (each project links its own) |
 | `gameinfo.h/.cpp` | the table's entry and `GameInfoFind` (the table: `src/gametable.cpp`) |
 | `hiscore.h/.cpp` | hiscores as MAME's plugin (`CHiscore`) and battery RAM or EEPROM (`CBatteryRam`), the core reached through a few functions |
 
@@ -506,7 +506,7 @@ timing.
 - **Rene Stange**: Circle (GPLv3).
 - **Shay Green** (blargg): snes_ntsc, the COMPOSITE filter (LGPL 2.1+).
 - **Rich Geldreich** and contributors: miniz (MIT).
-- **Damien Guard**: the ZX Origins fonts You Squared and Cyberwire.
+- **Damien Guard**: the ZX Origins font collection.
 - **Alessio Scanderebech**: idea, direction, design, testing on hardware.
 - **Claude** (Anthropic): code and documentation, written with Alessio.
 

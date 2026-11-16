@@ -72,7 +72,7 @@ static void LineDone (unsigned nRow)
 	}
 	if (SharedLoad (s_bComposite))
 	{
-		TvPost (g_VideoBuf + nRow * GAME_SRC_PITCH,
+		TvPost (g_VideoBuf + (nRow + GAME_SRC_Y) * GAME_SRC_PITCH + GAME_SRC_X,
 			(s_nTvBurst + nRow) % COMP_PHASES, nRow, SharedLoad (s_bRaced));
 	}
 	else
