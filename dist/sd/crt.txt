@@ -1,0 +1,5 @@
+# m92-pi - CRT on the composite jack (read by config.txt, see there)
+hdmi_force_hotplug=0
+hdmi_ignore_hotplug=1
+enable_tvout=1
+sdtv_mode=16

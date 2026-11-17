@@ -202,6 +202,7 @@ private:
 	// console lines
 	char			m_Lines[MaxLines][MaxLineLen];
 	u32			m_LineColor[MaxLines];
+	u32			m_LineMs[MaxLines];	// ms since power-on (LOG.TXT)
 	unsigned		m_nLines;
 	char			m_LastRaw[MaxLineLen];
 	unsigned		m_nRepeat;

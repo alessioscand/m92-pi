@@ -3,6 +3,8 @@
  */
 #include "kernel.h"
 #include <stdarg.h>
+#include <circle/bcm2835.h>
+#include <circle/memio.h>
 
 extern "C" int vsnprintf (char *pBuffer, size_t nSize, const char *pFormat, va_list Args);
 
@@ -61,6 +63,19 @@ int CLogSink::Write (const void *pBuffer, size_t nCount)
 	return (int) nCount;
 }
 
+// the system timer counts from power-on, the firmware's time included
+static u32 PowerOnMs (void)
+{
+	u32 nHi = read32 (ARM_SYSTIMER_CHI);
+	u32 nLo = read32 (ARM_SYSTIMER_CLO);
+	if (nHi != read32 (ARM_SYSTIMER_CHI))
+	{
+		nHi = read32 (ARM_SYSTIMER_CHI);
+		nLo = read32 (ARM_SYSTIMER_CLO);
+	}
+	return (u32) ((((u64) nHi << 32) | nLo) / 1000);
+}
+
 void CKernel::Log (const char *pLine, u32 nColor)
 {
 	if (m_nLines > 0 && strcmp (pLine, m_LastRaw) == 0)
@@ -82,6 +97,7 @@ void CKernel::Log (const char *pLine, u32 nColor)
 	strncpy (m_Lines[n], pLine, MaxLineLen - 1);
 	m_Lines[n][MaxLineLen - 1] = '\0';
 	m_LineColor[n] = nColor;
+	m_LineMs[n] = PowerOnMs ();
 	m_nLines++;
 
 	if (m_bQuiet)
@@ -138,14 +154,15 @@ void CKernel::WriteTextFile (const char *pPath, const char *pText)
 
 void CKernel::SaveLog (void)
 {
-	static char Text[MaxLines * (MaxLineLen + 2)];
+	static char Text[MaxLines * (MaxLineLen + 9)];
 	unsigned nFirst = m_nLines > MaxLines ? m_nLines - MaxLines : 0;
 	size_t nPos = 0;
 	for (unsigned i = nFirst; i < m_nLines; i++)
 	{
-		const char *pLine = m_Lines[i % MaxLines];
-		size_t nLen = strlen (pLine);
-		memcpy (Text + nPos, pLine, nLen);
+		const unsigned n = i % MaxLines;
+		nPos += snprintf (Text + nPos, 12, "%6u ", m_LineMs[n] < 999999 ? m_LineMs[n] : 999999);
+		size_t nLen = strlen (m_Lines[n]);
+		memcpy (Text + nPos, m_Lines[n], nLen);
 		nPos += nLen;
 		Text[nPos++] = '\r';
 		Text[nPos++] = '\n';
