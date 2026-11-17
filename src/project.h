@@ -37,7 +37,7 @@
 /* Error codes = number of green LED blinks when the screen is unusable */
 #define PROJECT_ERR_FB    2   /* framebuffer / HDMI */
 #define PROJECT_ERR_SD    3   /* SD card or FAT filesystem */
-#define PROJECT_ERR_GAME  5   /* no M92 game (MAME .zip) in the m92pi folder */
+#define PROJECT_ERR_GAME  5   /* no M92 or M90 game (MAME .zip) in the m92pi folder */
 #define PROJECT_ERR_CORE  6   /* emulator core error */
 #define PROJECT_ERR_MEM   7   /* out of memory */
 
