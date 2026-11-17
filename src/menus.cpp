@@ -1,6 +1,5 @@
 /*
- * m92-pi - menus: the game list, OPTIONS, DIP SWITCHES, CONTROLS, power off,
- * credits
+ * m92-pi - menus: list, OPTIONS, DIP SWITCHES, CONTROLS, power off, credits
  */
 #include "kernel.h"
 #include "frame.h"
@@ -247,10 +246,8 @@ void CKernel::RunSystemMenu (void)
 	}
 }
 
-// DIP SWITCHES (in-game menu): the game's own switches, with MAME's names and
-// settings. A changes the selected one (left/right too), B goes back. They
-// reach the board at once; many games only read them when they start, hence
-// the note. Saved per game in saves/<game>.dip.
+// DIP SWITCHES: MAME's names; A or left/right changes, B back; applied at
+// once (many games read them at start); saved in saves/<game>.dip
 void CKernel::RunDipMenu (void)
 {
 	if (m_nLoaded < 0)

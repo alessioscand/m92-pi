@@ -1,9 +1,6 @@
 /*
- * m92-pi - what the game list and the screen around the game show of each set:
- * a short title, the region under the list, year, maker and the names of
- * buttons A..F (none = not known: nothing is shown). Written by hand, once:
- * titles and regions from the old m92pi/list.txt, buttons from controls.dat
- * (SirPoonga, Howard Casto) and the games themselves.
+ * m92-pi - each set's title, region, year, maker and buttons A..F (none:
+ * not shown); by hand, buttons from controls.dat and the games
  */
 #include "gameinfo.h"
 

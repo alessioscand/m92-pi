@@ -1,11 +1,6 @@
 /*
- * m92-pi - what newlib and libstdc++ need from the "operating system"
- *
- * The M92 core uses the C++ standard library (containers, std::function),
- * which sits on newlib (as Nestopia does in nes-pi, whose file this is).
- * There is no operating system: memory comes from Circle's allocator, there
- * are no files (games and saves go through FatFs in the frontend) and nothing
- * is printed.
+ * m92-pi - the "operating system" newlib and libstdc++ need (as nes-pi's):
+ * memory from Circle, no files (FatFs in the frontend), no printing
  */
 #include <stddef.h>
 #include <stdint.h>

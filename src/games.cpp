@@ -1,6 +1,5 @@
 /*
- * m92-pi - games: the list on the card, loading a set (with its parent),
- * its save data and DIP switches
+ * m92-pi - games: the list, loading a set (and parent), saves, DIP switches
  */
 #include "kernel.h"
 #include "gameinfo.h"

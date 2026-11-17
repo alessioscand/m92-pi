@@ -1,6 +1,5 @@
 /*
- * m92-pi - console: the log on screen during start-up, on the serial port and
- * in LOG.TXT; fatal errors
+ * m92-pi - the log (screen at start-up, serial, LOG.TXT); fatal errors
  */
 #include "kernel.h"
 #include <stdarg.h>

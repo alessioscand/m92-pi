@@ -26,10 +26,8 @@ static boolean s_bRaced = FALSE;
 static unsigned s_nTvBurst = 0;			// colour burst phase of the frame (0-2)
 static unsigned s_nCoreFrames = 0, s_nMcFailFrame = 0;
 
-// Cabinet voicing, always on: the board's amplifier and a cabinet speaker
-// after MAME's flat mix, so that the YM2151 is less tinny. Low shelf +4 dB
-// below 120 Hz, 2nd-order low-pass at 8 kHz, -0.5 dB to keep the loudness.
-// One sample at a time, no buffering: no added latency (about 0.1% of core 0).
+// Cabinet voicing (the YM2151 less tinny): low shelf +4 dB below 120 Hz,
+// low-pass at 8 kHz, -0.5 dB; per sample, no added latency.
 static float s_Voice[4];			// biquad states (transposed direct form II)
 
 static void CabinetVoicing (int16_t *pBuf, unsigned nFrames)
