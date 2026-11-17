@@ -55,7 +55,7 @@ const TUITheme g_Theme =
 	s_Logo, sizeof s_Logo / sizeof s_Logo[0], 1, s_LogoKeys, s_LogoColors,
 	s_Credits, sizeof s_Credits / sizeof s_Credits[0],
 	{0, 0}, 0, 0,				// no frame: the grid's dither
-	{4, 3},					// the columns' text a little further out
+	{10, 3},				// the columns' text further out (720p: as far as LOAD 99% fits)
 	0					// the grid from the screen's centre
 };
 
