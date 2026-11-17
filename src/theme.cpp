@@ -56,11 +56,12 @@ const TUITheme g_Theme =
 	s_Credits, sizeof s_Credits / sizeof s_Credits[0],
 	{0, 0}, 0, 0,				// no frame: the grid's dither
 	{10, 3},				// the columns' text further out (720p: as far as LOAD 99% fits)
-	0					// the grid from the screen's centre
+	0,					// the grid from the screen's centre
+	FALSE					// thin lines (TRUE: a game pixel wide)
 };
 
 // the grid: a monitor test crosshatch at 75%, lines every 20 game pixels and
-// a dot in the middle of each square, one framebuffer pixel wide (two at 720p);
+// a dot in the middle of each square, a point wide (two at 720p if thin);
 // no dot in a square the screen's edge cuts
 u32 ThemeGrid (int x, int y, int M, int nHalfW, int nHalfH)
 {
