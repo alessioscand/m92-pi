@@ -10,7 +10,7 @@ bootlegs (different video and sound hardware) are left out.
 """
 import os, re, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from irem_ports import load_inputs, resolve, nice, cstr
+from irem_ports import load_inputs, resolve, nice, fit, cstr
 
 src = sys.argv[1]
 drv = open(os.path.join(src, 'm90.cpp')).read()
@@ -105,7 +105,7 @@ for inp in sorted(used_inputs):
     for d in dips:
         cond = d['cond']
         w('\t{ 0, 0x%04x, 0x%04x, %s, %s, %d, %d, 0x%04x, %d, 0x%04x },' % (
-            d['mask'], d['default'], cstr(nice(d['name'])), cstr(d['loc']),
+            d['mask'], d['default'], cstr(fit(nice(d['name']), [nice(n) for v, n in d['settings']])), cstr(d['loc']),
             idx, len(d['settings']),
             cond[0] if cond else 0, (1 if cond[1] == 'EQUALS' else 2) if cond else 0, cond[2] if cond else 0))
         idx += len(d['settings'])

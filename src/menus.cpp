@@ -350,9 +350,9 @@ boolean CKernel::RunDipMenu (void)
 			strncpy (Labels[i], D.pName, sizeof Labels[i] - 1);
 			Labels[i][sizeof Labels[i] - 1] = '\0';
 			const char *pVal = m92_dip_setting_name (nGame, Dips[i], nIdx, 0);
-			// label + value must fit in the wide panel (29 characters with the gap)
+			// label + value must fit in the wide panel (25 characters with the gap)
 			size_t nLabel = strlen (Labels[i]);
-			size_t nRoom = nLabel < 28 ? 29 - nLabel : 1;
+			size_t nRoom = nLabel < 23 ? 24 - nLabel : 1;
 			strncpy (Values[i], pVal ? pVal : "?", sizeof Values[i] - 1);
 			Values[i][sizeof Values[i] - 1] = '\0';
 			if (strlen (Values[i]) > nRoom) Values[i][nRoom] = '\0';
