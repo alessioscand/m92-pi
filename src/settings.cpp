@@ -92,13 +92,14 @@ void CKernel::ApplyVideoMode (void)
 	Log (Line, COLOR_TEXT);
 }
 
-// the border around the picture: with no game loaded always the grid; with
-// a game, OPTIONS > BEZEL, with the game's title, maker, year and buttons
+// the border around the picture, OPTIONS > BEZEL: with no game loaded the
+// grid (GRID, FULL) or black; with a game also the game's title, maker,
+// year and buttons (TEXT, FULL)
 void CKernel::UpdateBezel (void)
 {
 	if (m_nLoaded < 0)
 	{
-		m_Video.SetBezel (BEZEL_GRID, 0, 0);
+		m_Video.SetBezel (m_nBezel & BEZEL_GRID, 0, 0);
 		return;
 	}
 	static char Title[64], Maker[64];
@@ -181,9 +182,12 @@ void CKernel::LoadConfig (void)
 	else if (strstr (Text, "filter=SCANLINES_STRONG"))	m_nFilter = FILTER_SCAN_STRONG;
 	else if (strstr (Text, "filter=SCANLINES"))		m_nFilter = FILTER_SCAN_MEDIUM;
 	if (strstr (Text, "scaler=cpu"))	m_bHVS = FALSE;
+	// (gridinfo and info: the names before 1.2.0's last test)
 	if (strstr (Text, "bezel=off"))			m_nBezel = 0;
+	else if (strstr (Text, "bezel=full"))		m_nBezel = BEZEL_GRID | BEZEL_INFO;
 	else if (strstr (Text, "bezel=gridinfo"))	m_nBezel = BEZEL_GRID | BEZEL_INFO;
 	else if (strstr (Text, "bezel=grid"))		m_nBezel = BEZEL_GRID;
+	else if (strstr (Text, "bezel=text"))		m_nBezel = BEZEL_INFO;
 	else if (strstr (Text, "bezel=info"))		m_nBezel = BEZEL_INFO;
 	// (multicore and the scanlines on a Pi 3: decided after LoadConfig, also
 	// when m92pi.cfg does not exist yet)
