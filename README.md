@@ -319,7 +319,7 @@ the M90/M97 ones.
   hardware) are not in the tables.
 - Game tables: `python3 tools/gen_m90_tables.py <mame>/src/mame/irem >
   core/m90_games.inc` (shorter DIP names where the panel needs them, in
-  `irem_ports.nice()`). Hiscores: `gen_m92_hiscore.py ... core/m90_games.inc
+  `irem_ports.nice()` and `fit()`). Hiscores: `gen_m92_hiscore.py ... core/m90_games.inc
   m90 > core/m90_hiscore.inc` (8 of the 9 sets have an entry; not `newapunk`).
 - Save states: magic `M90 `, version 1; the Z80's callbacks are put back
   after a load.
@@ -338,7 +338,7 @@ Mostly neo-pi's, see neo-pi's `BUILD.md` for the shared parts.
 | `settings.cpp` | `m92pi.cfg`, the video mode it asks for, `pads.cfg` |
 | `games.cpp` | game list (`ScanGames`), loading a set with its parent, save files, DIP switches (`LoadDips`) |
 | `gametable.cpp` | what the list and the border show of each set (short title, region, year, maker, the names of its buttons), written by hand |
-| `saves.cpp` | hiscores (`HiStart` / `HiTick` / `HiSave`) and the EEPROM of Major Title 2 (`NvStart` / `NvSave`), with `common/hiscore.cpp` |
+| `saves.cpp` | hiscores (`HiStart` / `HiTick` / `HiSave`) and the EEPROM of Major Title 2 (`NvStart` / `NvSave` / `NvClear`), with `common/hiscore.cpp` |
 | `menus.cpp` | game list, in-game menu, OPTIONS, DIP SWITCHES, CONTROLS, power off countdown, credits |
 | `gameloop.cpp` | `RunGame`: pads to the M92 panels, one emulated frame per screen frame, the in-game menu, the status line |
 | `frame.h/.cpp` | the emulated frame: picture and sound buffers, where the lines go (screen, core 1, COMPOSITE on core 2), cabinet voicing |
@@ -395,6 +395,8 @@ bottom line shows `SET  REGION`.
 
 Per-game files in `m92pi/saves/`: `<set>.dip` (`dsw=FFBE dsw3=FF`), `<set>.st1`
 (save state), `<set>.nv` (Major Title 2 EEPROM), `<set>.hi` (hiscores).
+DIP SWITCHES > CLEAR MEMORY (games with an EEPROM) puts the EEPROM back to
+its factory contents (`CBatteryRam::Clear`) and resets the game.
 
 Hiscores (`HiStart` / `HiTick` / `HiSave` in `saves.cpp`, the work in
 `common/hiscore.cpp`, the same as s16-pi's; rows in
@@ -423,7 +425,9 @@ add the entry to MAME's `hiscore.dat` and regenerate `m92_hiscore.inc`.
 
 DIP SWITCHES leaves out Unknown, Flip Screen (not emulated) and Service Mode;
 `LoadDips` puts Flip Screen and Service Mode back to MAME's default, so an
-old `.dip` cannot keep a game in service mode.
+old `.dip` cannot keep a game in service mode. Name and longest value fit in
+24 characters (25 with the gap): short forms in `irem_ports.SHORT`, and
+`irem_ports.fit()` warns about any row that does not.
 
 Settings file `m92pi/m92pi.cfg`: `cpu=normal|turbo`, `filter=...`, and the testing
 options `scaler=cpu`, `usbpoll=500|250|native`, `multicore=off`,
