@@ -1,20 +1,27 @@
 /*
- * Audio output: HDMI, or the 3.5 mm jack (PWM) with a CRT
- *
- * About 800 stereo frames at 48 kHz arrive per emulated frame (from the
- * project's frame code). The display and the audio clock are not exactly locked, so
- * the queue level is kept around TARGET by stretching or shrinking each block
- * by a few samples (linear interpolation, inaudible).
+ * Audio output, HDMI or (with a CRT) the 3.5 mm jack: ~800 frames at 48 kHz
+ * per emulated frame. Video and audio clocks drift, so each block is
+ * stretched or shrunk by a few samples (linear interpolation) to keep the
+ * queue near TARGET.
  */
 #include "audio.h"
+#include "project.h"
 #include <circle/sound/hdmisoundbasedevice.h>
 #include <circle/sound/pwmsoundbasedevice.h>
 
 #define SAMPLE_RATE	48000
 #define CHUNK_SIZE	(384 * 2)		// words per DMA chunk (multiple of 384): 384 stereo frames = 8 ms
 #define QUEUE_FRAMES	4800			// 100 ms queue capacity
-#define TARGET_FRAMES	1600			// keep ~2 video frames queued (~33 ms)
+// the queue level aimed at, and how far it may drift before each block is
+// stretched or shrunk: by default ~2 video frames (~33 ms); a project whose
+// frames are never late can ask for less in its project.h (less audio lag)
+#ifdef PROJECT_AUDIO_TARGET
+#define TARGET_FRAMES	PROJECT_AUDIO_TARGET
+#define BAND_FRAMES	PROJECT_AUDIO_BAND
+#else
+#define TARGET_FRAMES	1600
 #define BAND_FRAMES	400
+#endif
 
 CAudioOut::CAudioOut (void)
 :	m_pSound (0),

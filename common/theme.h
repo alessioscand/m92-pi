@@ -1,7 +1,6 @@
 /*
- * What makes the menus and the border one project's own: colours, fonts,
- * logo, credits and the background ("grid"). Each project defines them in
- * its src/theme.cpp; common/ui.cpp and common/video.cpp use them.
+ * A project's look (src/theme.cpp): colours, fonts, logo, credits and the
+ * background ("grid")
  */
 #ifndef COMMON_THEME_H
 #define COMMON_THEME_H
@@ -19,7 +18,7 @@ struct TUITheme
 	u32		 nBand;			// the selected line
 	u32		 nCursor;		// the triangle on it
 	u32		 nTitle;		// panel titles, LOADING, the bar
-	u32		 nValue;		// values, counters
+	u32		 nValue;		// values, the scroll arrows, the author
 	u32		 nDim;			// labels, names not selected
 	u32		 nPower;		// POWER OFF, CLEAR MEMORY
 
@@ -27,6 +26,12 @@ struct TUITheme
 	const unsigned char (*pMenuFont)[8];
 	const unsigned char (*pListFont)[8];	// the game list's titles
 	boolean		 bListLower;		// it has lower case (else capitals)
+	const unsigned char (*pInfoFont)[8];	// around the picture: title,
+						// buttons, status line, messages
+
+	// the game list's bottom row (set and region or maker, the counter)
+	u32		 nListInfo;		// its colour
+	boolean		 bListInfoInListFont;	// in pListFont (else pMenuFont)
 
 	// the logo above the game list: one string per row, one character per
 	// pixel; pLogoKeys[i] is drawn in pLogoColors[i], anything else is clear
@@ -36,19 +41,33 @@ struct TUITheme
 	const char	*pLogoKeys;
 	const u32	*pLogoColors;
 
-	// credits: up to 10 rows "WHAT", "WHO", then two lines at the bottom
+	// credits: up to 10 rows "WHAT", "WHO" (the trademarks: README, LICENSES)
 	const char *const (*pCredits)[2];
 	unsigned	 nCredits;
-	const char	*pTrademark1;
-	const char	*pTrademark2;
+
+	// around a game, [0] 1080p, [1] 720p: a frame nFrame game pixels out (0:
+	// none, the grid's dither), the grid lit near it (nFrameColour, back in
+	// nFrameGlow game pixels); the side text nSideShift game pixels further
+	int		 nFrame[2];
+	u32		 nFrameColour;
+	int		 nFrameGlow;
+	int		 nSideShift[2];
+	// a fabric: the grid's step in game pixels, through the frame's corners
+	// (0: from the screen's centre)
+	int		 nFabric;
+	// lines a game pixel wide (FALSE: thin)
+	boolean		 bPixel;
+	// without a frame: whole squares of nSquare game pixels (lines from the
+	// screen's centre), a square's width clear around the picture (0: dither)
+	int		 nSquare;
 };
 
 extern const TUITheme g_Theme;
 
-// The background (the menus' and the border's "grid"), 0xRRGGBB, at a game
-// pixel counted from the screen's centre, x and y >= 0: the same towards
-// every side, so that the grid is symmetric; ThemeGround: its empty colour
-u32 ThemeGrid (int x, int y);
+// The grid (0xRRGGBB) at point x, y from the screen's centre (with nFabric:
+// from the frame's bottom right corner), M points per game pixel; nHalfW,
+// nHalfH: half the screen. ThemeGround: its empty colour.
+u32 ThemeGrid (int x, int y, int M, int nHalfW, int nHalfH);
 u32 ThemeGround (void);
 
 #endif

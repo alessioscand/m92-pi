@@ -1,6 +1,5 @@
 /*
- * m92-pi - games: the list on the card, loading a set (with its parent),
- * its save data and DIP switches
+ * m92-pi - games: the list, loading a set (and parent), saves, DIP switches
  */
 #include "kernel.h"
 #include "gameinfo.h"
@@ -98,42 +97,6 @@ static void ZipBase (const char *pFile, char *pOut, size_t nSize)
 }
 
 
-// MAME's name split in title and region: "Hook (Japan)" -> "Hook", "JAPAN";
-// the region loses "sound CPU", "M92 hardware" and the commas
-static void SplitMameName (const char *pDesc, char *pTitle, size_t nTitle, char *pRegion, size_t nRegion)
-{
-	const char *pPar = 0;				// the last '('
-	for (const char *q = pDesc; *q; q++)
-	{
-		if (*q == '(') pPar = q;
-	}
-	size_t n = pPar ? (size_t) (pPar - pDesc) : strlen (pDesc);
-	while (n > 0 && pDesc[n - 1] == ' ') n--;
-	if (n > nTitle - 1) n = nTitle - 1;
-	memcpy (pTitle, pDesc, n);
-	pTitle[n] = '\0';
-	pRegion[0] = '\0';
-	if (pPar)
-	{
-		char Tmp[64];
-		strncpy (Tmp, pPar + 1, sizeof Tmp - 1);
-		Tmp[sizeof Tmp - 1] = '\0';
-		char *pClose = strchr (Tmp, ')');
-		if (pClose) *pClose = '\0';
-		static const char *Drop[] = {" sound CPU", " M92 hardware", ","};
-		for (const char *d : Drop)
-		{
-			char *q;
-			while ((q = strstr (Tmp, d)) != 0)
-			{
-				memmove (q, q + strlen (d), strlen (q + strlen (d)) + 1);
-			}
-		}
-		strncpy (pRegion, Tmp, nRegion - 1);
-		pRegion[nRegion - 1] = '\0';
-	}
-}
-
 void CKernel::ScanGames (void)
 {
 	m_pGames = new TGameEntry[MaxGames];
@@ -183,22 +146,13 @@ void CKernel::ScanGames (void)
 
 		TGameEntry &G = m_pGames[m_nGames];
 		strcpy (G.File, Info.fname);
-		char Title[64], Region[32], MameTitle[64], MameRegion[32];
-		SplitMameName (m92_game_desc (nGame), MameTitle, sizeof MameTitle, MameRegion, sizeof MameRegion);
-		const TGameInfo *pInfo = GameInfoFind (Base);	// gameinfo.cpp
-		if (pInfo)
-		{
-			strncpy (Title, pInfo->pTitle, sizeof Title - 1);
-			Title[sizeof Title - 1] = '\0';
-			strncpy (Region, pInfo->pRegion[0] ? pInfo->pRegion : MameRegion, sizeof Region - 1);
-			Region[sizeof Region - 1] = '\0';
-		}
-		else
-		{
-			strncpy (Title, m92_game_desc (nGame), sizeof Title - 1);	// MAME's full name
-			Title[sizeof Title - 1] = '\0';
-			strcpy (Region, MameRegion);
-		}
+		// title and region from our table (gametable.cpp); else MAME's name
+		const TGameInfo *pInfo = GameInfoFind (Base);
+		char Title[64], Region[32];
+		strncpy (Title, pInfo ? pInfo->pTitle : m92_game_desc (nGame), sizeof Title - 1);
+		Title[sizeof Title - 1] = '\0';
+		strncpy (Region, pInfo ? pInfo->pRegion : "", sizeof Region - 1);
+		Region[sizeof Region - 1] = '\0';
 		strncpy (G.Name, Title, sizeof G.Name - 1);
 		G.Name[sizeof G.Name - 1] = '\0';
 		snprintf (G.Info, sizeof G.Info, "%s  %s", Base, Region);

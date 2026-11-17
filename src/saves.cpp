@@ -1,8 +1,6 @@
 /*
- * m92-pi - hiscores (core/m92_hiscore.inc, from MAME's hiscore.dat) in
- * saves/<game>.hi, and the EEPROM of Major Title 2 / The Irem Skins Game in
- * saves/<game>.nv. The work itself is common/hiscore.cpp; here are the core
- * and the log.
+ * m92-pi - hiscores (saves/<game>.hi) and Major Title 2's EEPROM
+ * (saves/<game>.nv) through common/hiscore.cpp
  */
 #include "kernel.h"
 #include "mcline.h"

@@ -236,6 +236,11 @@ IRQ lines as MAME's driver: 0 vblank, 1 sprite DMA end, 2 raster, 3 sound latch 
   the Pi, `FrameTakeAudio` in `src/frame.cpp` then applies the cabinet voicing, always
   on: low shelf +4 dB below 120 Hz and 2nd-order low-pass at 8 kHz (RBJ biquads,
   float, one sample at a time, no latency), -0.5 dB to keep the loudness.
+- The sound is brought up to date at every line (`m92_machine::scanline`), not
+  only at the YM2151's timers (about every 4 ms): the same samples, but the
+  work is spread over the frame instead of stalling a few lines, which beam
+  racing feels. So the audio queue can be one video frame instead of two
+  (`PROJECT_AUDIO_TARGET` in `src/project.h`): ~17 ms of audio lag, not ~33.
 
 ### 3.8 Game tables (`tools/gen_m92_tables.py`)
 
@@ -331,14 +336,13 @@ Mostly neo-pi's, see neo-pi's `BUILD.md` for the shared parts.
 | `kernel.h`, `kernel.cpp` | the kernel class; start-up, starting cores 1 and 2, the main flow (list, game, list...), power off |
 | `console.cpp` | the start-up log on screen, serial and `LOG.TXT`; fatal errors |
 | `settings.cpp` | `m92pi.cfg`, the video mode it asks for, `pads.cfg` |
-| `games.cpp` | game list (`ScanGames`, `SplitMameName`), loading a set with its parent, save files, DIP switches (`LoadDips`) |
+| `games.cpp` | game list (`ScanGames`), loading a set with its parent, save files, DIP switches (`LoadDips`) |
 | `gametable.cpp` | what the list and the border show of each set (short title, region, year, maker, the names of its buttons), written by hand |
 | `saves.cpp` | hiscores (`HiStart` / `HiTick` / `HiSave`) and the EEPROM of Major Title 2 (`NvStart` / `NvSave`), with `common/hiscore.cpp` |
 | `menus.cpp` | game list, in-game menu, OPTIONS, DIP SWITCHES, CONTROLS, power off countdown, credits |
 | `gameloop.cpp` | `RunGame`: pads to the M92 panels, one emulated frame per screen frame, the in-game menu, the status line |
 | `frame.h/.cpp` | the emulated frame: picture and sound buffers, where the lines go (screen, core 1, COMPOSITE on core 2), cabinet voicing |
 | `racing.h/.cpp` | beam racing state for the game loop (`g_Race`), the line hook |
-| `report.cpp` | the per-minute report in `LOG.TXT` |
 | `bench.cpp` | BENCH and MCTEST |
 | `mcline.h/.cpp` | multicore line drawing: core 0 queues `(y, line_regs)` in a ring, core 1 draws; `McSync()` before VRAM/palette/sprites change; if core 1 stops answering for 0.5 s it falls back to single core and logs it |
 | `theme.cpp` | m92-pi's look for `common/ui.cpp` and the border: colours (petrol, white titles, cyan values like the logo's i), fonts, the logo (88x15), credits, the grid (`ThemeGrid`: the test crosshatch) |
@@ -367,11 +371,12 @@ files; nothing else in the kernel changes.
 | `pacing.h/.cpp` | frame phase (`PROJECT_PHASE_LINE`) and frame delay (`framedelay=`) when not racing |
 | `stats.h/.cpp` | timing statistics: histograms, averages, percentiles (`BENCH.TXT`, the per-minute log lines) |
 | `screen.h` | `CScreen`, the only interface the kernel draws through (game, menus, console, border, text beside the picture) |
-| `video.h/.cpp` | `CVideoOut`, the HDMI `CScreen`: framebuffer, HVS (at most 2x) / CPU integer scaling, scanlines, the border (BEZEL: black or the grid, with the game's title and buttons at 1080p), status line and messages in the side columns (Lander) |
+| `video.h/.cpp` | `CVideoOut`, the HDMI `CScreen`: framebuffer, HVS (at most 2x) / CPU integer scaling, scanlines, the border (BEZEL: black or the grid, with the game's title and buttons at 1080p), status line and messages in the side columns (in the theme's font: Lander here) |
 | `ui.h/.cpp` | all the menus, drawn at 304x224 in the middle of the picture: on every project the panels fall on the same pixels of the screen |
 | `theme.h` | what `src/theme.cpp` gives `ui.cpp` and `video.cpp` |
-| `fonts.h`, `font_*.c` | the ZX Origins fonts: You Squared, Cyberwire, Matinee, Lander (each project links its own) |
+| `fonts.h`, `font_*.c` | the ZX Origins fonts: You Squared, Cyberwire, Lander, Matinee (each project links its own) |
 | `gameinfo.h/.cpp` | the table's entry and `GameInfoFind` (the table: `src/gametable.cpp`) |
+| `report.cpp` | the per-minute report in `LOG.TXT` |
 | `hiscore.h/.cpp` | hiscores as MAME's plugin (`CHiscore`) and battery RAM or EEPROM (`CBatteryRam`), the core reached through a few functions |
 
 Buttons in `RunGame`: A and B are buttons 1 and 2, the only ones the games use.
@@ -385,9 +390,8 @@ Cores: 0 = emulation + sound + main loop, 1 = M92 lines (`mcline`),
 2 = COMPOSITE (`tvcore`), 3 idle. `multicore=off` keeps everything on core 0.
 
 Game list: one entry per M92 MAME zip in `SD:/m92pi`. Display names from
-`src/gametable.cpp` (title and region), otherwise MAME's description
-(`SplitMameName` drops " sound CPU", " M92 hardware", commas); the bottom line
-shows `SET  REGION`.
+`src/gametable.cpp` (title and region), otherwise MAME's description; the
+bottom line shows `SET  REGION`.
 
 Per-game files in `m92pi/saves/`: `<set>.dip` (`dsw=FFBE dsw3=FF`), `<set>.st1`
 (save state), `<set>.nv` (Major Title 2 EEPROM), `<set>.hi` (hiscores).

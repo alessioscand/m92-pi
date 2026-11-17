@@ -1,9 +1,6 @@
 /*
- * m92-pi - the emulated frame: its picture and sound, and where its lines go
- *
- * Each line the core finishes goes straight to the screen (with the
- * scanlines), from core 1 or from core 0 when it draws the lines itself;
- * with COMPOSITE it goes to core 2, which filters it and puts it on screen.
+ * m92-pi - the emulated frame: picture, sound, where its lines go (to the
+ * screen from core 1, or core 0 single core; COMPOSITE: core 2)
  */
 #ifndef FRAME_H
 #define FRAME_H

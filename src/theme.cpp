@@ -50,21 +50,32 @@ const TUITheme g_Theme =
 	0xF8F8F8, 0x37D6D6, 0x96A8AB,		// title, value, dim
 	0xFF5050,				// POWER OFF
 	g_FontYouSquared, g_FontCyberwire, FALSE,
+	g_FontLander,				// around the picture
+	0x37D6D6, TRUE,				// the list's bottom row: value, list font
 	s_Logo, sizeof s_Logo / sizeof s_Logo[0], 1, s_LogoKeys, s_LogoColors,
 	s_Credits, sizeof s_Credits / sizeof s_Credits[0],
-	"IREM IS A TRADEMARK", "OF ITS OWNER."
+	{0, 0}, 0, 0,				// no frame: the grid's dither
+	{10, 3},				// the columns' text further out (720p: as far as LOAD 99% fits)
+	0,					// the grid from the screen's centre
+	FALSE,					// thin lines (TRUE: a game pixel wide)
+	0					// no frame: the dither
 };
 
-// the grid: a monitor test crosshatch at 75%, lines every 20 pixels and a
-// dot in the middle of each square
-u32 ThemeGrid (int x, int y)
+// the grid: a monitor test crosshatch at 75%, lines every 20 game pixels and
+// a dot in the middle of each square, a point wide (two at 720p if thin);
+// no dot in a square the screen's edge cuts
+u32 ThemeGrid (int x, int y, int M, int nHalfW, int nHalfH)
 {
-	const int mx = x % 20, my = y % 20;
-	if (mx == 10 || my == 10)
+	const int P = 20 * M, t = (M + 1) / 2;
+	const int mx = (x + P * 64) % P, my = (y + P * 64) % P;
+	if ((mx - 10 * M + P) % P < t || (my - 10 * M + P) % P < t)
 	{
 		return 0x103034;
 	}
-	return mx == 0 && my == 0 ? 0x164545 : 0x041015;
+	const int nHalf = 10 * M;			// the dot's square: 10 game pixels around it
+	const boolean bWhole =    (x < 0 ? -x : x) + nHalf <= nHalfW
+			       && (y < 0 ? -y : y) + nHalf <= nHalfH;
+	return mx < t && my < t && bWhole ? 0x164545 : 0x041015;
 }
 
 u32 ThemeGround (void)

@@ -1,9 +1,6 @@
 /*
- * The screen: what the kernel draws the game, the menus and the console on
- *
- * The kernel uses only this interface. CVideoOut (video.cpp) is the HDMI
- * screen; another output (a CRT on the composite jack) would be another
- * implementation, in its own files.
+ * The screen the kernel draws on (game, menus, console); CVideoOut
+ * (video.cpp) is HDMI, another output would be another implementation.
  */
 #ifndef COMMON_SCREEN_H
 #define COMMON_SCREEN_H
@@ -30,8 +27,9 @@
 // a pixel of the menus where the screen's grid shows (DrawGame, no filter)
 #define GRID_HOLE	0x00010203u
 
-#define BEZEL_GRID	1	// the background (theme.h); else black
+#define BEZEL_GRID	1	// the background (theme.h), behind the menus too; else black
 #define BEZEL_INFO	2	// the game's title and buttons (where there is room)
+				// OPTIONS > BEZEL: OFF, TEXT (INFO), GRID, FULL (both)
 
 // Logical colours (R in the low byte); the screen converts them if the
 // framebuffer stores red in the high byte (Pi 4)
@@ -92,13 +90,9 @@ public:
 	};
 	virtual void SetBezel (unsigned nMode, const TBezelInfo *pInfo, unsigned nId) = 0;
 
-	// Text beside the picture, '\n' starts a new line (a line too long for
-	// the column wraps at a space). Left column: lines right-aligned to the
-	// picture, the last one level with its bottom (status line, NO PAD);
-	// right column: left-aligned, the first one level with its top
-	// (messages). Where the columns are too narrow (a 4:3 display) the left
-	// column goes in the band below the picture and the right one in the band
-	// above, on one line. No spans = clear.
+	// Text beside the picture ('\n': new line, long lines wrap): left column
+	// right-aligned, bottom-aligned (status, NO PAD); right column top-aligned
+	// (messages); too narrow (4:3): the bands below / above. No spans: clear.
 	struct TTextSpan { const char *pText; u32 nColor; };	// colour: 0xRRGGBB
 	virtual void DrawSideText (boolean bRight, const TTextSpan *pSpans, unsigned nSpans) = 0;
 

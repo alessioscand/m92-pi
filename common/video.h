@@ -1,22 +1,12 @@
 /*
  * HDMI output
  *
- * Console mode: framebuffer at the HDMI resolution (boot text, errors).
- * Game mode: integer scaling of the game's picture (project.h), split between
- * the CPU (draw scale m) and the hardware scaler HVS (factor k), S = m * k:
- *   - the framebuffer is (display / k), so the HVS enlarges it exactly k times
- *     with the same factor in both directions (square pixels, no stretching);
- *   - black borders are drawn by us inside the framebuffer;
- *   - if the display is not divisible by any useful k, k = 1 (CPU only).
- * Filters (applied while drawing, no extra buffering, no added lag):
- *   scanlines in three strengths (dark rows at 75%, 50% or 25%).
- * The border (BEZEL): black, or the theme's grid going on around the
- * picture; with a game, its title above the picture and its buttons below
- * (only where the bands are tall enough: 1080p). Drawn once in both buffers
- * when it changes. The status line and the messages go in the side columns,
- * in the Lander font with a hard shadow: drawn by the caller's core (core 0)
- * only when they change, prepared apart and copied a finished row at a time,
- * only over the border, so the line drawing (beam racing) does not change.
+ * Console mode: the framebuffer at the HDMI resolution. Game mode: integer
+ * scaling S = m * k, m by the CPU, k by the HVS (square pixels; k = 1 if no
+ * useful factor). Scanlines (75%, 50%, 25%) while drawing, no added lag.
+ * The border (BEZEL): black or the theme's grid, with a game its title and
+ * buttons (1080p), drawn once. Status and messages in the side columns,
+ * drawn by core 0 only when they change, over the border only.
  */
 #ifndef COMMON_VIDEO_H
 #define COMMON_VIDEO_H
@@ -86,12 +76,20 @@ private:
 		       unsigned nTextScale, const CCharGenerator &Font);
 	// the border
 	struct TTarget { u32 *pBase; unsigned nPitch, nW, nH; };	// where text goes
-	void GridAt (unsigned x, unsigned y, int *pGX, int *pGY) const;
+	void BgPoint (unsigned *pX, unsigned *pY) const;
+	int GameDistance (unsigned x, unsigned y, int *pGX, int *pGY) const;
+	u32 ToFb (u32 c) const;					// 0xRRGGBB -> framebuffer
+	u32 GridColour (unsigned x, unsigned y) const;		// 0xRRGGBB
 	u32 GridPixel (unsigned x, unsigned y) const;		// framebuffer order
+	u32 FramePixel (unsigned x, unsigned y, int d) const;
+	u32 DitherPixel (unsigned x, unsigned y, int d, int gx, int gy) const;
+	u32 SquarePixel (unsigned x, unsigned y) const;
 	u32 BgPixel (unsigned x, unsigned y) const;		// framebuffer order
 	void FillBorder (unsigned nBuf);
 	void DrawInfoLines (unsigned nBuf);
-	// Lander text, scale m_nU, hard shadow; nColor 0xRRGGBB; returns the next x
+	unsigned DrawButtons (const TTarget &T, unsigned x, unsigned y);
+	// the theme's pInfoFont, scale m_nU, hard shadow; nColor 0xRRGGBB;
+	// returns the next x
 	unsigned InfoWidth (const char *pText) const;
 	unsigned DrawInfoText (const TTarget &T, unsigned x, unsigned y, const char *pText, u32 nColor);
 
@@ -117,6 +115,14 @@ private:
 	boolean	 m_bSide;			// status and messages in the side columns
 	boolean	 m_bBands;			// room for the title and the buttons
 	unsigned m_nGap;			// text from the picture and the screen edge
+	unsigned m_nSideGap;			// the columns' text from the picture
+	unsigned m_nBgK;			// the background's points: framebuffer
+	unsigned m_nBgM;			// pixels each (1, or m_nM with bPixel),
+						// points to a game pixel (m_nM, or 1)
+	int	 m_nFrame;			// the theme's frame, game pixels (0: none)
+	int	 m_nFrameR, m_nFrameB;		// its lines, background points from the
+	int	 m_nFrameL, m_nFrameT;		// screen's centre (left, top: minus)
+	int	 m_nGridX0, m_nGridY0;		// where ThemeGrid counts from
 	unsigned m_nColTop, m_nColBot;		// the columns' text: between these lines
 
 	// the border

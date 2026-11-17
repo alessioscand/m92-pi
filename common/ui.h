@@ -1,9 +1,6 @@
 /*
- * The menus, the same in every project: drawn in a buffer of the game's
- * size and format (XRGB8888, R high), so they go to the screen like the
- * game. The layout is 304x224, in the middle of the picture: on every
- * project the panels fall on the same pixels of the screen, and inside a
- * TV's safe area. Colours, fonts, logo and background: the theme (theme.h).
+ * The menus, the same in every project: drawn like the game (its size,
+ * XRGB8888), laid out on 304x224 in the middle; the look from theme.h.
  */
 #ifndef COMMON_UI_H
 #define COMMON_UI_H
@@ -24,9 +21,8 @@
 #define UI_ERR		0xFF6E6Eu
 #define UI_VALUE	(g_Theme.nValue)
 
-// OPTIONS > BEZEL: the next value (nDir +1 / -1, in the menu's order OFF,
-// INFO, GRID, GRID+INFO) and its name: "GRID+INFO" in the menu, "gridinfo"
-// in the .cfg and the log
+// OPTIONS > BEZEL: the next value (nDir +1 / -1: OFF, TEXT, GRID, FULL) and
+// its name ("FULL" in the menu, "full" in the .cfg and the log)
 unsigned BezelNext (unsigned nBezel, int nDir);
 const char *BezelName (unsigned nBezel, boolean bMenu);
 
@@ -59,6 +55,9 @@ public:
 	u32 *GetBuffer (void)	{ return m_Buf; }
 	// the last menu is over the grid (no game behind): shown with no filter
 	boolean ShowsGrid (void) const	{ return m_bGrid; }
+	// the logo above the game list (not on a CRT: it would leave the title
+	// safe area)
+	void SetLogo (boolean bShow)	{ m_bLogo = bShow; }
 
 	// another font for the game list's titles (neo-pi: the BIOS's own)
 	void SetListFont (const unsigned char (*pFont)[8], boolean bLower);
@@ -70,10 +69,8 @@ public:
 		       boolean bOverGame, unsigned nTicks);
 	// the picture behind the next menus, darkened: call when they open
 	void SnapshotGame (const u32 *pGameBuf);
-	// A panel with a title and rows. bWide: as wide as the game list (DIP
-	// SWITCHES: MAME's names, label and value up to 30 characters); nRows:
-	// sized for that many rows (a list that scrolls keeps its shape);
-	// bMoreAbove / bMoreBelow: arrows on the frame, more rows out of view
+	// A panel with a title and rows. bWide: as wide as the list (DIP
+	// SWITCHES); nRows: its size in rows; bMoreAbove / Below: arrows
 	void DrawPanelMenu (boolean bOverGame, const char *pTitle,
 			    const TMenuItem *pItems, unsigned nItems, unsigned nSel,
 			    const char *pMessage, u32 nMessageColor,
@@ -98,7 +95,7 @@ private:
 	void Fill (int x, int y, int w, int h, u32 c);
 	void Background (void);
 	void Backdrop (boolean bOverGame);
-	void Logo (void);
+	void Logo (int y);
 	void Panel (int x0, int y0, int x1, int y1);
 	void Separator (int x0, int x1, int y);
 	void Text (int x, int y, const char *s, u32 c, unsigned nTall = 1, boolean bList = FALSE);
@@ -113,6 +110,7 @@ private:
 	const unsigned char (*m_pListFont)[8];
 	boolean	m_bListLower;
 	boolean	m_bGrid;
+	boolean	m_bLogo;
 	int	m_nClipX0, m_nClipX1;	// Pixel draws only inside (a scrolling title)
 };
 

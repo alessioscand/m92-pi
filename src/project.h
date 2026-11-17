@@ -5,7 +5,7 @@
 #define PROJECT_H
 
 #define PROJECT_NAME	"m92-pi"
-#define PROJECT_VERSION	"1.3.0-crt2"
+#define PROJECT_VERSION	"1.3.0-crt3"
 
 /* The emulated picture: the core hands over 320x240 lines, pitch 320 */
 #define PROJECT_WIDTH	320
@@ -29,10 +29,15 @@
 /* Each emulated frame starts here: the first line after the picture */
 #define PROJECT_PHASE_LINE	248
 
+/* Audio queue (common/audio.cpp): ~1 video frame (~17 ms) instead of 2,
+   less audio lag; the sound is made a line at a time (core/m92.cpp) */
+#define PROJECT_AUDIO_TARGET	800
+#define PROJECT_AUDIO_BAND	200
+
 /* Error codes = number of green LED blinks when the screen is unusable */
 #define PROJECT_ERR_FB    2   /* framebuffer / HDMI */
 #define PROJECT_ERR_SD    3   /* SD card or FAT filesystem */
-#define PROJECT_ERR_GAME  5   /* no M92 game (MAME .zip) in the m92pi folder */
+#define PROJECT_ERR_GAME  5   /* no M92 or M90 game (MAME .zip) in the m92pi folder */
 #define PROJECT_ERR_CORE  6   /* emulator core error */
 #define PROJECT_ERR_MEM   7   /* out of memory */
 

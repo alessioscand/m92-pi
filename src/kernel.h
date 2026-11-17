@@ -1,10 +1,8 @@
 /*
- * m92-pi - kernel: game list, play with USB pads and HDMI audio, in-game menu
- * with save states and DIP switches, automatic diagnostics in LOG.TXT
- *
- * The class is implemented by area: kernel.cpp (start-up, power off),
- * console.cpp, games.cpp, hiscore.cpp, settings.cpp, menus.cpp, gameloop.cpp,
- * bench.cpp, report.cpp, racing.cpp.
+ * m92-pi - kernel: list, play, in-game menu, diagnostics in LOG.TXT; one file
+ * per area:
+ * kernel, console, games, saves, settings, menus, gameloop, bench, report,
+ * racing
  */
 #ifndef KERNEL_H
 #define KERNEL_H
@@ -167,7 +165,7 @@ private:
 	void Benchmark (void);
 	void McTest (unsigned nSel);
 
-	// report.cpp, racing.cpp
+	// common/report.cpp, racing.cpp
 	void ResetGameStats (void);
 	void ReportWindow (boolean bFinal);
 	void SetupBeamRacing (void);

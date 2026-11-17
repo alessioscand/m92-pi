@@ -114,19 +114,19 @@ boolean CCrtOut::Initialize (void)
 	m_nGameX = (m_nWidth - GAME_W) / 2;
 	m_nGameY = (m_nHeight - GAME_H) / 2;	// 224-line boards: 8 black lines above and below
 
-	// the menus' grid where the picture goes, centred as on HDMI
+	// the menus' grid where the picture goes, from the screen's centre as on
+	// HDMI, one point per game pixel
 	m_pGridPic = new u32[GAME_W * GAME_H];
 	if (m_pGridPic == 0)
 	{
 		return FALSE;
 	}
+	const int W2 = (int) (m_nWidth / 2), H2 = (int) (m_nHeight / 2);
 	for (unsigned y = 0; y < GAME_H; y++)
 	{
-		const unsigned cy = y >= GAME_H / 2 ? y - GAME_H / 2 : GAME_H / 2 - 1 - y;
 		for (unsigned x = 0; x < GAME_W; x++)
 		{
-			const unsigned cx = x >= GAME_W / 2 ? x - GAME_W / 2 : GAME_W / 2 - 1 - x;
-			const u32 c = ThemeGrid ((int) cx + 1, (int) cy + 1);
+			const u32 c = ThemeGrid ((int) (m_nGameX + x) - W2, (int) (m_nGameY + y) - H2, 1, W2, H2);
 			m_pGridPic[y * GAME_W + x] = Native (RGB ((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF));
 		}
 	}

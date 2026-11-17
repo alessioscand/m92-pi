@@ -1,7 +1,6 @@
 /*
- * m92-pi - the M92 video lines drawn on core 1 (see mcline.h)
- *
- * One ring of jobs: core 0 writes only s_nHead, core 1 only s_nTail.
+ * m92-pi - lines on core 1 (mcline.h): a ring, core 0 writes s_nHead, core 1
+ * s_nTail
  */
 #include "mcline.h"
 #include "smp.h"

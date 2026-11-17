@@ -1,9 +1,6 @@
 /*
- * m92-pi - what the game list and the screen around the game show of each set:
- * a short title, the region under the list, year, maker and the names of
- * buttons A..F (none = not known: nothing is shown). Written by hand, once:
- * titles and regions from the old m92pi/list.txt, buttons from controls.dat
- * (SirPoonga, Howard Casto) and the games themselves.
+ * m92-pi - each set's title, region, year, maker and buttons A..F (none:
+ * not shown); by hand, buttons from controls.dat and the games
  */
 #include "gameinfo.h"
 
@@ -41,7 +38,7 @@ const TGameInfo g_GameInfo[] =
 	{"majtitl2a", "Major Title 2", "World Set 2", "1992", "Irem", {"shot", "option"}},
 	{"majtitl2b", "Major Title 2", "World Set 3", "1992", "Irem", {"shot", "option"}},
 	{"majtitl2j", "Major Title 2", "Japan", "1992", "Irem", {"shot", "option"}},
-	{"matchit2", "Match It II", "World", "1993", "Tamtex", {0}},
+	{"matchit2", "Match It II", "World", "1993", "Tamtex", {"pick", "undo", "help"}},
 	{"mysticri", "Mystic Riders", "World", "1992", "Irem", {"shot", "broom"}},
 	{"mysticrib", "Mystic Riders", "Bootleg", "1992", "Irem", {"shot", "broom"}},
 	{"nbbatman", "Ninja Baseball Bat Man", "World", "1993", "Irem", {"attack", "jump"}},
@@ -52,7 +49,7 @@ const TGameInfo g_GameInfo[] =
 	{"riskchal", "Risky Challenge", "World", "1993", "Irem", {"rotate counter", "rotate clockwise"}},
 	{"rtypeleo", "R-Type Leo", "World", "1992", "Irem", {"fire", "psy-bit"}},
 	{"rtypeleoj", "R-Type Leo", "Japan", "1992", "Irem", {"fire", "psy-bit"}},
-	{"shisen2", "Shisensho II", "Japan", "1993", "Tamtex", {0}},
+	{"shisen2", "Shisensho II", "Japan", "1993", "Tamtex", {"pick", "undo", "help"}},
 	{"skingame", "The Irem Skins Game", "US Set 1", "1992", "Irem", {"shot", "option"}},
 	{"skingame2", "The Irem Skins Game", "US Set 2", "1992", "Irem", {"shot", "option"}},
 	{"ssoldier", "Superior Soldiers", "US", "1993", "Irem", {"punch", "punch", "punch", "kick", "kick", "kick"}},

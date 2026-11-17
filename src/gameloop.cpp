@@ -1,7 +1,6 @@
 /*
- * m92-pi - the game loop: pads to the M92 panels, one emulated frame per
- * screen frame (beam raced, or double buffered with a frame delay), the
- * in-game menu, the messages and the status line beside the picture
+ * m92-pi - the game loop: pads, one emulated frame per screen frame (beam
+ * raced, or double buffered with a frame delay), in-game menu, side text
  */
 #include "kernel.h"
 #include "frame.h"
@@ -22,10 +21,8 @@ void m92pi_png_free (void *p);
 
 enum { GmSave, GmLoad, GmDips, GmOptions, GmReset, GmList, GmPower, GmCount };
 
-// Before a frame: with beam racing, wait for the moment the plan gives
-// against the HDMI scan-out (returns that moment); otherwise, while playing,
-// wait the frame delay after the vsync (returns 0). The time spent waiting
-// does not count as work: *pT0 moves on by it.
+// Before a frame: beam racing, wait for the planned moment (returned); else
+// the frame delay after the vsync (returns 0). The wait moves *pT0 on.
 static unsigned WaitForFrameStart (boolean bRace, boolean bPlaying, unsigned nLastVSync, unsigned *pT0)
 {
 	if (bRace)

@@ -2,8 +2,9 @@
 // the same scripted inputs every time (coins, start, pseudo-random joystick and buttons).
 // Two builds giving the same file emulate identically.
 //
-//   g++ -std=c++20 -O2 -I core -I third_party/mame -I third_party -I third_party/miniz
-//       -o hashrun test/hashrun.cpp core/m92.cpp core/m92_video.cpp core/m92_sound.cpp
+//   g++ -std=c++20 -O2 -I test -I core -I third_party/mame -I third_party -I third_party/miniz
+//       -o hashrun test/hashrun.cpp core/m92.cpp core/irem_machine.cpp core/m92_video.cpp
+//       core/m92_sound.cpp
 //       third_party/mame/irem_cpu.cpp third_party/mame/nec/{nec,v25,v25sfr}.cpp
 //       third_party/ymfm/ymfm_opm.cpp -x c third_party/miniz/miniz.c
 //   ./hashrun <rom folder> <set> <frames> <out.txt>     MC=1: lines drawn late, as multicore
@@ -28,7 +29,7 @@ static std::vector<std::pair<int, m92_machine::line_regs>> s_queue;	// MC=1: lin
 static void draw_queued(void *)
 {
 	for (auto &job : s_queue)
-		s_machine->render_line(job.second, job.first, s_fb + job.first * 320);
+		s_machine->render_line(&job.second, job.first, s_fb + job.first * 320);
 	s_queue.clear();
 }
 
@@ -59,7 +60,7 @@ int main(int argc, char **argv)
 	const bool mc = getenv("MC") != nullptr;
 	if (mc)
 	{
-		m.set_line_sink([](int y, const m92_machine::line_regs &r) { s_queue.push_back({y, r}); });
+		m.set_line_sink([](int y, const void *r) { s_queue.push_back({y, *static_cast<const m92_machine::line_regs *>(r)}); });
 		m.set_video_sync(draw_queued, nullptr);
 	}
 	else
