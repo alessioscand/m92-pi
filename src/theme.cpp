@@ -56,7 +56,8 @@ const TUITheme g_Theme =
 	s_Credits, sizeof s_Credits / sizeof s_Credits[0],
 	"IREM IS A TRADEMARK", "OF ITS OWNER.",
 	{0, 0}, 0, 0,				// no frame: the grid's dither
-	{4, 3}					// the columns' text a little further out
+	{4, 3},					// the columns' text a little further out
+	0					// the grid from the screen's centre
 };
 
 // the grid: a monitor test crosshatch at 75%, lines every 20 game pixels and
