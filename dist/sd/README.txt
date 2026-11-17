@@ -17,7 +17,7 @@ WHAT'S NEW IN 1.2.0
   - At 1080p the picture is scaled 2x by the CPU and 2x by the video
     scaler, so that the texts around it are sharp.
   - DIP SWITCHES: the panel is as tall as the game's switches (up to
-    10 rows, then the list scrolls, with arrows on the frame); under
+    7 rows, then the list scrolls, with arrows on the frame); under
     it, where the selected switch is on the board (e.g. SW1:1,2).
   - POWER OFF: only the countdown box, over the paused game.
   - Game names, years and makers are built in: m92pi/list.txt is no

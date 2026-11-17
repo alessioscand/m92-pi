@@ -258,7 +258,7 @@ void CKernel::RunDipMenu (void)
 		return;
 	}
 	const int nGame = m_pGames[m_nLoaded].nGame;
-	enum { MaxItems = 24, Window = 10 };	// the panel grows up to 10 rows, then the list scrolls
+	enum { MaxItems = 24, Window = 7 };	// the panel grows up to 7 rows (title safe on a CRT), then the list scrolls
 	unsigned nSel = 0, nFirst = 0;
 	u32 nPrev = ~0u;
 	boolean bChanged = FALSE;
