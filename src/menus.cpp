@@ -383,7 +383,7 @@ boolean CKernel::RunDipMenu (void)
 		// the list scrolls, and the arrows say there is more above or below
 		static const TButtonHint Hints[2] = {{'A', "CHANGE"}, {'B', "BACK"}};
 		static const TButtonHint ClearHints[2] = {{'A', "CLEAR"}, {'B', "BACK"}};
-		m_pUI->DrawPanelMenu (TRUE, "DIP SWITCHES", Items + nFirst, nShown, nSel - nFirst, pMsg, UI_WARN,
+		m_pUI->DrawPanelMenu (TRUE, "DIP SWITCHES", Items + nFirst, nShown, nSel - nFirst, pMsg, UI_VALUE,
 				      nSel == nItems ? ClearHints : Hints, 2, pLocation, TRUE,
 				      nRows < Window ? nRows : (unsigned) Window, nFirst > 0, nFirst + nShown < nRows);
 		ShowUIFrame ();
