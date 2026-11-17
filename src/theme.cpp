@@ -60,8 +60,9 @@ const TUITheme g_Theme =
 };
 
 // the grid: a monitor test crosshatch at 75%, lines every 20 game pixels and
-// a dot in the middle of each square, one framebuffer pixel wide (two at 720p)
-u32 ThemeGrid (int x, int y, int M)
+// a dot in the middle of each square, one framebuffer pixel wide (two at 720p);
+// no dot in a square the screen's edge cuts
+u32 ThemeGrid (int x, int y, int M, int nHalfW, int nHalfH)
 {
 	const int P = 20 * M, t = (M + 1) / 2;
 	const int mx = (x + P * 64) % P, my = (y + P * 64) % P;
@@ -69,7 +70,10 @@ u32 ThemeGrid (int x, int y, int M)
 	{
 		return 0x103034;
 	}
-	return mx < t && my < t ? 0x164545 : 0x041015;
+	const int nHalf = 10 * M;			// the dot's square: 10 game pixels around it
+	const boolean bWhole =    (x < 0 ? -x : x) + nHalf <= nHalfW
+			       && (y < 0 ? -y : y) + nHalf <= nHalfH;
+	return mx < t && my < t && bWhole ? 0x164545 : 0x041015;
 }
 
 u32 ThemeGround (void)
