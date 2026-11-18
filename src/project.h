@@ -5,7 +5,7 @@
 #define PROJECT_H
 
 #define PROJECT_NAME	"m92-pi"
-#define PROJECT_VERSION	"1.3.0-crt4"
+#define PROJECT_VERSION	"1.3.0-crt5"
 
 /* The emulated picture: the core hands over 320x240 lines, pitch 320 */
 #define PROJECT_WIDTH	320

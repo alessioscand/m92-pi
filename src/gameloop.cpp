@@ -113,6 +113,7 @@ void CKernel::RunGame (void)
 		g_Race.pRacer->Restart ();
 		g_Race.pRacer->ResetStats ();
 	}
+	m_bVideoChanged = FALSE;
 	{
 		unsigned nOld;
 		m_pInput->TakeChange (&nOld);	// a press from the list does not count
@@ -616,7 +617,20 @@ boolean CKernel::PlayMenu (const u32 Pad[4])
 			break;
 
 		case GmDips:			// over the paused game; B comes back here
-			RunDipMenu ();
+			if (RunDipMenu ())
+			{
+				// CLEAR MEMORY: the EEPROM as it left the factory, then a
+				// reset (the board reads it when it starts); the .hi table stays
+				HiSave ();
+				NvClear ();
+				m92_reset ();
+				HiStart ();
+				snprintf (P.Toast, sizeof P.Toast, "MEMORY\nCLEARED");
+				P.nToast = 180;
+				Log ("  EEPROM: factory contents, reset", COLOR_TEXT);
+				P.bMenu = FALSE;
+				break;
+			}
 			P.nMenuPrev = ~0u;
 			break;
 

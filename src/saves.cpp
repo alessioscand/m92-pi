@@ -72,6 +72,12 @@ void CKernel::NvStart (void)
 	}
 }
 
+// CLEAR MEMORY: the EEPROM back to its factory contents, the file deleted
+void CKernel::NvClear (void)
+{
+	s_Battery.Clear ();
+}
+
 void CKernel::NvSave (void)
 {
 	McSync ();

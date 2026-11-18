@@ -262,18 +262,21 @@ void CKernel::RunSystemMenu (void)
 }
 
 // DIP SWITCHES: MAME's names; A or left/right changes, B back; applied at
-// once (many games read them at start); saved in saves/<game>.dip
-void CKernel::RunDipMenu (void)
+// once (many games read them at start); saved in saves/<game>.dip. With an
+// EEPROM (Major Title 2) a last row, CLEAR MEMORY: returns TRUE (the game
+// loop puts the factory contents back)
+boolean CKernel::RunDipMenu (void)
 {
 	if (m_nLoaded < 0)
 	{
-		return;
+		return FALSE;
 	}
 	const int nGame = m_pGames[m_nLoaded].nGame;
 	enum { MaxItems = 24, Window = 7 };	// the panel grows up to 7 rows (title safe on a CRT), then the list scrolls
 	unsigned nSel = 0, nFirst = 0;
 	u32 nPrev = ~0u;
-	boolean bChanged = FALSE;
+	boolean bChanged = FALSE, bClear = FALSE;
+	const boolean bEeprom = m92_eeprom (0) != 0;
 	const u16 nOldDsw = m_nDsw;
 	const u8 nOldDsw3 = m_nDsw3;
 
@@ -302,27 +305,33 @@ void CKernel::RunDipMenu (void)
 			}
 			Dips[nItems++] = d;
 		}
-		if (nItems == 0)
+		const unsigned nRows = nItems + (bEeprom ? 1 : 0);	// then CLEAR MEMORY
+		if (nRows == 0)
 		{
 			break;
 		}
-		if (nSel >= nItems) nSel = nItems - 1;
+		if (nSel >= nRows) nSel = nRows - 1;
 
 		m_pInput->UpdateDevices ();
 		u32 n = m_pInput->GetAny ();
 		u32 nNew = nPrev == ~0u ? 0 : (n & ~nPrev);
 		nPrev = n;
-		if (nNew & BTN_UP)	nSel = (nSel + nItems - 1) % nItems;
-		if (nNew & BTN_DOWN)	nSel = (nSel + 1) % nItems;
+		if (nNew & BTN_UP)	nSel = (nSel + nRows - 1) % nRows;
+		if (nNew & BTN_DOWN)	nSel = (nSel + 1) % nRows;
 		int nDir = (nNew & (BTN_A | BTN_RIGHT)) ? 1 : ((nNew & BTN_LEFT) ? -1 : 0);
 		if (nNew & BTN_B)
 		{
 			break;
 		}
+		if (nSel == nItems && (nNew & BTN_A))
+		{
+			bClear = TRUE;
+			break;
+		}
 
 		// value of each switch, as text
 		static char Values[MaxItems][32];
-		TMenuItem Items[MaxItems];
+		TMenuItem Items[MaxItems + 1];
 		static char Labels[MaxItems][32];
 		for (unsigned i = 0; i < nItems; i++)
 		{
@@ -356,9 +365,9 @@ void CKernel::RunDipMenu (void)
 			strncpy (Labels[i], D.pName, sizeof Labels[i] - 1);
 			Labels[i][sizeof Labels[i] - 1] = '\0';
 			const char *pVal = m92_dip_setting_name (nGame, Dips[i], nIdx, 0);
-			// label + value must fit in the wide panel (29 characters with the gap)
+			// label + value must fit in the wide panel (25 characters with the gap)
 			size_t nLabel = strlen (Labels[i]);
-			size_t nRoom = nLabel < 28 ? 29 - nLabel : 1;
+			size_t nRoom = nLabel < 23 ? 24 - nLabel : 1;
 			strncpy (Values[i], pVal ? pVal : "?", sizeof Values[i] - 1);
 			Values[i][sizeof Values[i] - 1] = '\0';
 			if (strlen (Values[i]) > nRoom) Values[i][nRoom] = '\0';
@@ -367,18 +376,31 @@ void CKernel::RunDipMenu (void)
 			Items[i].bDisabled = FALSE;
 		}
 
-		TM92Dip S;
-		m92_dip_get (nGame, Dips[nSel], &S);
+		Items[nItems].pLabel = "CLEAR MEMORY";	// red, as POWER OFF
+		Items[nItems].pValue = 0;
+		Items[nItems].bDisabled = FALSE;
+
+		// under the panel: the switch's place, or what CLEAR MEMORY clears
+		// (always a line: the panel keeps its height)
+		const char *pLocation = "EEPROM";
+		if (nSel < nItems)
+		{
+			TM92Dip S;
+			m92_dip_get (nGame, Dips[nSel], &S);
+			pLocation = S.pLocation;
+		}
 		const char *pMsg = bChanged ? "SOME APPLY AFTER RESET" : "";
 		if (nSel < nFirst) nFirst = nSel;
 		if (nSel >= nFirst + Window) nFirst = nSel - Window + 1;
-		if (nFirst + Window > nItems) nFirst = nItems > Window ? nItems - Window : 0;
-		unsigned nShown = nItems - nFirst < Window ? nItems - nFirst : (unsigned) Window;
+		if (nFirst + Window > nRows) nFirst = nRows > Window ? nRows - Window : 0;
+		unsigned nShown = nRows - nFirst < Window ? nRows - nFirst : (unsigned) Window;
 		// the panel is as tall as the game's switches, up to Window rows; then
 		// the list scrolls, and the arrows say there is more above or below
 		static const TButtonHint Hints[2] = {{'A', "CHANGE"}, {'B', "BACK"}};
+		static const TButtonHint ClearHints[2] = {{'A', "CLEAR"}, {'B', "BACK"}};
 		m_pUI->DrawPanelMenu (TRUE, "DIP SWITCHES", Items + nFirst, nShown, nSel - nFirst, pMsg, UI_VALUE,
-				      Hints, 2, S.pLocation, TRUE, nItems < Window ? nItems : (unsigned) Window, nFirst > 0, nFirst + nShown < nItems);
+				      nSel == nItems ? ClearHints : Hints, 2, pLocation, TRUE,
+				      nRows < Window ? nRows : (unsigned) Window, nFirst > 0, nFirst + nShown < nRows);
 		ShowUIFrame ();
 	}
 
@@ -389,6 +411,7 @@ void CKernel::RunDipMenu (void)
 		snprintf (Line, sizeof Line, "  DIP switches: DSW %04X, SW3 %02X", m_nDsw, m_nDsw3);
 		Log (Line, COLOR_TEXT);
 	}
+	return bClear;
 }
 
 // CONTROLS from the SYSTEM menu: which pad? (the only one, or the one that is pressed)

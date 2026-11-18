@@ -3,30 +3,17 @@ m92-pi 1.2.0 - Bare-metal Irem M92 and M90 emulator for Raspberry Pi 3 and 4
 
 WHAT'S NEW IN 1.2.0
 
-  - New look, shared with s16-pi and neo-pi: dark grid behind the
-    menus, panels with a thick frame, the logo above the game list, the
-    MAME set and region at the bottom.
-  - OPTIONS > BEZEL: the background. FULL (default): the grid, and
-    while playing at 1080p the game's title, maker and year above the
-    picture and what its buttons do below. GRID: the grid only. TEXT:
-    the texts on black. OFF: black. With TEXT and OFF the menus are on
-    black too. The border is drawn once, never during play.
-  - Status line (Select + C) and messages beside the picture, in the
-    left and right columns, at 720p too. They are redrawn only when they
-    change: no more flickering lines.
-  - At 1080p the picture is scaled 2x by the CPU and 2x by the video
-    scaler, so that the texts around it are sharp.
-  - DIP SWITCHES: the panel is as tall as the game's switches (up to
-    7 rows, then the list scrolls, with arrows on the frame); under
-    it, where the selected switch is on the board (e.g. SW1:1,2).
-  - POWER OFF: only the countdown box, over the paused game.
-  - Game names, years and makers are built in: m92pi/list.txt is no
-    longer used.
-  - Hiscores and the EEPROM of Major Title 2 and The Irem Skins Game use
-    the same code as s16-pi.
-  - To update a card, copy the new files over the old ones: games,
-    saves, hiscores, settings and pads.cfg in m92pi are kept and work
-    as before.
+  - A new look, built around a bezel that frames the game with a dark
+    grid. At 1080p, it also shows the game's title, developer and year
+    above the picture, with a custom button layout below for every game.
+    Prefer the bare game screen? OPTIONS > BEZEL lets you strip it all
+    away, right down to black.
+  - The status line and the messages sit beside the picture, never over
+    the game, at 720p too, and they no longer flicker.
+  - Game names, years and publishers are now built in: m92pi/list.txt
+    is no longer needed.
+  - Under-the-hood improvements, bug fixes and updates shared with
+    its siblings s16-pi, neo-pi and nes-pi.
 
 SET-UP
 
@@ -40,6 +27,9 @@ SET-UP
      MAME versions work.
   4. Connect a USB gamepad and the display (on a Pi 4, HDMI 0, next to the
      power socket). Insert the card and switch on.
+
+  To update a card, copy the new files over the old ones: games, saves,
+  hiscores, settings and pads.cfg in m92pi are kept and work as before.
 
 START-UP
 
@@ -59,6 +49,9 @@ START-UP
     Results in m92pi/MCTEST.TXT. Delete MCTEST to start normally.
 
 SETTING UP THE CONTROLS
+
+  Although wireless gamepads are supported, wired ones are preferable for
+  maximum responsiveness.
 
   The first time a pad model is connected, the CONTROLS screen opens by
   itself. Press the button you want for each function, in this order: A,
@@ -100,7 +93,10 @@ IN-GAME MENU (hold Select for 1 second; B resumes the game)
   DIP SWITCHES  The board's switches (difficulty, lives, coinage,
                 cabinet...). A or Left/Right changes, B goes back. Many
                 games read them only at start-up: SOME APPLY AFTER RESET.
-                Saved per game.
+                Under the panel, where the selected switch is on the
+                board (e.g. SW1:1,2). Saved per game. Major Title 2 and
+                The Irem Skins Game end with CLEAR MEMORY: the EEPROM
+                back to its factory contents, then a reset.
   OPTIONS       The OPTIONS menu, over the paused game; B comes back here.
   RESET         Restart the game.
   GAME LIST     Back to the game list.
@@ -125,10 +121,17 @@ OPTIONS MENU (D in the game list, or from the in-game menu)
                 added lag. On a Pi 3 the scanlines and COMPOSITE need
                 multicore: with multicore=off this item shows MULTICORE
                 OFF.
-  BEZEL         The background: FULL, GRID, TEXT or OFF (see WHAT'S
-                NEW). In m92pi.cfg: bezel=full, grid, text or off.
+  BEZEL         The space around the picture:
+                OFF    black
+                TEXT   game information and basic controls on black
+                       (at 1080p)
+                GRID   the dark grid
+                FULL   the complete bezel, with game information above
+                       the picture and button assignments below (at
+                       1080p)
   CONTROLS      Set up a pad (with several pads, press a button on the one
-                to set up).
+                to set up). To skip a function, press a button already
+                assigned.
   POWER OFF     As in the in-game menu.
 
 STATUS LINE (Select + C)

@@ -10,7 +10,7 @@ The C preprocessor expands the input port macros.
 """
 import os, re, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from irem_ports import load_inputs, resolve, nice, cstr
+from irem_ports import load_inputs, resolve, nice, fit, cstr
 
 src = sys.argv[1]
 drv = open(os.path.join(src, 'm92.cpp')).read()
@@ -97,7 +97,7 @@ for inp in used_inputs:
     for pn, d in dips:
         cond = d['cond']
         w('\t{ %d, 0x%04x, 0x%04x, %s, %s, %d, %d, 0x%04x, %d, 0x%04x },' % (
-            1 if pn == 'COINS_DSW3' else 0, d['mask'], d['default'], cstr(nice(d['name'])), cstr(d['loc']),
+            1 if pn == 'COINS_DSW3' else 0, d['mask'], d['default'], cstr(fit(nice(d['name']), [nice(n) for v, n in d['settings']])), cstr(d['loc']),
             idx, len(d['settings']),
             cond[0] if cond else 0, (1 if cond[1] == 'EQUALS' else 2) if cond else 0, cond[2] if cond else 0))
         idx += len(d['settings'])

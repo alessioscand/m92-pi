@@ -123,6 +123,7 @@ private:
 	void HiSave (void);
 	void NvStart (void);			// saves.cpp: the EEPROM
 	void NvSave (void);
+	void NvClear (void);
 
 	// settings.cpp
 	static const char *FilterName (unsigned nFilter);
@@ -138,7 +139,7 @@ private:
 	void ShowUIFrame (boolean bWait = TRUE, const char *pTopMessage = 0);
 	unsigned RunList (unsigned nSel);
 	void RunSystemMenu (void);
-	void RunDipMenu (void);
+	boolean RunDipMenu (void);		// TRUE: CLEAR MEMORY
 	int ChoosePad (void);
 	boolean RunMapping (unsigned nSlot, boolean bOverGame);
 	boolean PowerOffCountdown (void);
@@ -198,6 +199,7 @@ private:
 	boolean			m_bVideoOK;
 	boolean			m_bSDOK;
 	boolean			m_bQuiet;	// UI/emulation running: console not drawn
+	boolean			m_bVideoChanged;	// ApplyVideoMode since the beam racer last restarted
 
 	// console lines
 	char			m_Lines[MaxLines][MaxLineLen];

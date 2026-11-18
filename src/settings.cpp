@@ -62,6 +62,7 @@ void CKernel::ApplyVideoMode (void)
 			  m_Video.GetWidth (), m_Video.GetHeight (), m_Video.GetFBWidth (),
 			  m_Video.GetFBHeight (), (m_Video.GetFBWidth () - GAME_W) / 2, m_Video.GetGameY ());
 		Log (Line, COLOR_TEXT);
+		m_bVideoChanged = TRUE;
 		return;
 	}
 	if (m_nFilter == FILTER_COMPOSITE && !TvReady ())
@@ -97,6 +98,7 @@ void CKernel::ApplyVideoMode (void)
 		  FilterName (m_Video.GetFilter ()), m_bHVS ? "" : " (scaler=cpu)");
 	Log (Line, COLOR_TEXT);
 	UpdateBezel ();
+	m_bVideoChanged = TRUE;
 	snprintf (Line, sizeof Line, "Video: pixel order %s (%u), red in the %s byte%s",
 		  m_Video.GetPixelOrder () ? "RGB" : "BGR", m_Video.GetPixelOrder (),
 		  m_Video.IsRedLow () ? "low" : "high", "");

@@ -1,7 +1,7 @@
 """m92-pi: the parts of the table generators shared by the M92 and M90 drivers:
 MAME's INPUT_PORTS (expanded by the C preprocessor) and the names as shown in
 the DIP SWITCHES panel."""
-import os, re, subprocess, tempfile
+import os, re, subprocess, sys, tempfile
 
 defs = r'''
 #define INPUT_PORTS_START(n) @START n
@@ -123,6 +123,28 @@ NICE = {
     'Very_Easy': 'Very Easy', 'Free_Play': 'Free Play', 'Very_Hard': 'Very Hard',
     'Cabinet': 'Cabinet', 'Upright': 'Upright', 'Cocktail': 'Cocktail',
 }
+SHORT = {
+    'Given Holes/Stroke Play': 'Holes/Stroke Play',
+    'Given Holes/Match or Skins': 'Holes/Match or Skins',
+    'Points Per Ticket': 'Points/Ticket',
+    'Starting Button': 'Start With',
+    '15000 35000 60000': '15K 35K 60K',
+    '20000 50000 90000': '20K 50K 90K',
+    '4 Player Upright A': '4P Upright A',
+    '4 Player Upright B': '4P Upright B',
+    'Game Title': 'Title',
+}
+
+# name and longest value in at most 24 characters (25 fit, one is the gap)
+FIT = 24
+
+def fit(name, values):
+    if name == 'Bonus Life' and len(name) + max(map(len, values)) > FIT:
+        name = 'Bonus'
+    if len(name) + max(map(len, values)) > FIT:
+        sys.stderr.write('too long: %s\n' % name)
+    return name
+
 def nice(s):
     # shortened so that name and value fit on one line of the DIP SWITCHES panel
     if s == '700k 1500k 3000k 4500k':
@@ -146,6 +168,7 @@ def nice(s):
         return 'Any Button Start'
     if s == '2 Coins to Start/1 to Continue':
         return '2C Start/1C Cont.'
+    s = SHORT.get(s, s)
     s = NICE.get(s, s)
     m = re.fullmatch(r'(\d+)C_(\d+)C', s)
     if m:
