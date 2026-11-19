@@ -22,7 +22,8 @@ for K in "$K4" "$K3"; do
 done
 
 # the Raspberry Pi firmware (third_party/rpi-firmware)
-for F in bootcode.bin start.elf start4.elf fixup.dat fixup4.dat armstub8-rpi4.bin \
+for F in bootcode.bin start.elf start4.elf fixup.dat fixup4.dat \
+	 start_cd.elf start4cd.elf fixup_cd.dat fixup4cd.dat armstub8-rpi4.bin \
 	 bcm2711-rpi-4-b.dtb bcm2711-rpi-400.dtb bcm2711-rpi-cm4.dtb LICENCE.broadcom; do
 	[ -f "third_party/rpi-firmware/$F" ] || fail "third_party/rpi-firmware/$F missing"
 done

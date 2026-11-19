@@ -11,6 +11,7 @@
 #include <circle/memory.h>
 #include <circle/multicore.h>
 #include <circle/bcmwatchdog.h>
+#include <circle/bcmpropertytags.h>
 
 CKernel *CKernel::s_pThis = 0;
 
@@ -105,8 +106,12 @@ TShutdownMode CKernel::Run (void)
 
 	CMachineInfo *pInfo = CMachineInfo::Get ();
 	m_CPUThrottle.SetSpeed (CPUSpeedMaximum);
-	snprintf (Line, sizeof Line, "%s, %u MB RAM, CPU %u MHz, temperature %u C",
-		  pInfo->GetMachineName (), pInfo->GetRAMSize (),
+	CBcmPropertyTags Tags;			// GPU memory: 16 MB with the cut-down firmware
+	TPropertyTagMemory VcMem;
+	const unsigned nGpuMB = Tags.GetTag (PROPTAG_GET_VC_MEMORY, &VcMem, sizeof VcMem)
+				? VcMem.nSize >> 20 : 0;
+	snprintf (Line, sizeof Line, "%s, %u MB RAM, GPU %u MB, CPU %u MHz, temperature %u C",
+		  pInfo->GetMachineName (), pInfo->GetRAMSize (), nGpuMB,
 		  m_CPUThrottle.GetClockRate () / 1000000, m_CPUThrottle.GetTemperature ());
 	Log (Line, COLOR_TEXT);
 	snprintf (Line, sizeof Line, "%s %ux%u, pixel order %s", m_bCrt ? "CRT (composite)" : "HDMI",
