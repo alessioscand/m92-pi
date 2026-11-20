@@ -6,22 +6,13 @@
 #include "m92_api.h"
 #include <circle/machineinfo.h>
 
-void CKernel::ShowUIFrame (boolean bWait, const char *pTopMessage)
+void CKernel::ShowUIFrame (boolean bWait)
 {
 	UpdateBezel ();
 	// a menu over the grid (no game behind it): no filter, so that its grid
 	// and the border's are one
 	FrameDrawPicture (m_pUI->GetBuffer (), m_nLoaded >= 0 && !m_pUI->ShowsGrid ());
-	if (pTopMessage && pTopMessage[0])
-	{
-		// in the left column, where the status line goes while playing
-		const CScreen::TTextSpan Span = {pTopMessage, UI_ERR};
-		m_Video.DrawSideText (FALSE, &Span, 1);
-	}
-	else
-	{
-		m_Video.DrawSideText (FALSE, 0, 0);	// no status line or message over menus
-	}
+	m_Video.DrawSideText (FALSE, 0, 0);	// no status line or message over menus
 	m_Video.DrawSideText (TRUE, 0, 0);
 	m_Video.Flip ();
 	if (!bWait)
@@ -95,11 +86,10 @@ unsigned CKernel::RunList (unsigned nSel)
 		}
 		nPrev = n;
 
-		const char *pMsg = m_pInput->GetPadCount () == 0 ? "NO PAD" : "";
 		nTicks = nSel == nShown ? nTicks + 1 : 0;
 		nShown = nSel;
 		m_pUI->DrawList (m_pGames, m_nGames, nSel, m_nLoaded >= 0, nTicks);
-		ShowUIFrame (TRUE, pMsg);
+		ShowUIFrame ();
 	}
 }
 
@@ -224,6 +214,10 @@ void CKernel::RunSystemMenu (void)
 		if (!pShow[0] && nSel == SmCpu)
 		{
 			pShow = m_nCpuSpeed == CPU_TURBO ? "FEWER SLOWDOWNS" : "AS THE ARCADE BOARD";
+		}
+		else if (!pShow[0] && nSel == SmBezel && (m_nBezel & BEZEL_INFO))
+		{
+			pShow = "TEXT AT 1080P ONLY";	// the title and buttons need the bands
 		}
 		else if (pShow[0])
 		{
