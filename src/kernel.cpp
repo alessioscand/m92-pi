@@ -42,7 +42,8 @@ CKernel::CKernel (void)
 	m_CPUThrottle (CPUSpeedMaximum),
 	m_USBHCI (&m_Interrupt, &m_Timer, TRUE),
 	m_EMMC (&m_Interrupt, &m_Timer, &m_ActLED),
-	m_bCrt (CCrtOut::Detect ()),
+	m_nCrt (CCrtOut::Detect ()),
+	m_bCrt (m_nCrt != CRT_NONE),
 	m_Video (m_bCrt ? (CScreen &) m_Crt : (CScreen &) m_Hdmi),
 	m_pInput (0),
 	m_pUI (0),
@@ -85,7 +86,10 @@ boolean CKernel::Initialize (void)
 {
 	m_bVideoOK = m_Video.Initialize ();
 
-	m_Serial.Initialize (115200);
+	if (m_nCrt != CRT_DPI)		// VGA666: GPIO 14 and 15 carry colour bits
+	{
+		m_Serial.Initialize (115200);
+	}
 
 	return    m_Logger.Initialize (&m_LogSink)
 	       && m_Interrupt.Initialize ()
@@ -106,7 +110,7 @@ TShutdownMode CKernel::Run (void)
 
 	CMachineInfo *pInfo = CMachineInfo::Get ();
 	m_CPUThrottle.SetSpeed (CPUSpeedMaximum);
-	CBcmPropertyTags Tags;			// GPU memory: 16 MB with the cut-down firmware
+	CBcmPropertyTags Tags;			// GPU memory (gpu_mem)
 	TPropertyTagMemory VcMem;
 	const unsigned nGpuMB = Tags.GetTag (PROPTAG_GET_VC_MEMORY, &VcMem, sizeof VcMem)
 				? VcMem.nSize >> 20 : 0;
@@ -114,7 +118,8 @@ TShutdownMode CKernel::Run (void)
 		  pInfo->GetMachineName (), pInfo->GetRAMSize (), nGpuMB,
 		  m_CPUThrottle.GetClockRate () / 1000000, m_CPUThrottle.GetTemperature ());
 	Log (Line, COLOR_TEXT);
-	snprintf (Line, sizeof Line, "%s %ux%u, pixel order %s", m_bCrt ? "CRT (composite)" : "HDMI",
+	snprintf (Line, sizeof Line, "%s %ux%u, pixel order %s", m_nCrt == CRT_DPI ? "CRT (VGA666, DPI)"
+		  : m_bCrt ? "CRT (composite)" : "HDMI",
 		  m_Video.GetWidth (), m_Video.GetHeight (), m_Video.GetPixelOrder () ? "RGB" : "BGR");
 	Log (Line, COLOR_TEXT);
 

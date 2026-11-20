@@ -10,7 +10,7 @@
 #define PROPTAG_RELEASE_BUFFER	0x00048001
 #define PROPTAG_GET_PIXEL_ORDER	0x00040006	// 0 = BGR, 1 = RGB
 
-#define FB_W		(GAME_W + 40)		// 360: x2 by the HVS = 720
+#define FB_W		(GAME_W + 40)		// composite, 360: x2 by the HVS = 720
 #define FB_H		240			// NTSC, progressive
 
 CCrtOut::CCrtOut (void)
@@ -40,16 +40,28 @@ CCrtOut::~CCrtOut (void)
 	delete m_pFrameBuffer;
 }
 
-// the composite output: 720x480 (NTSC; 720x576 PAL is not supported yet)
-boolean CCrtOut::Detect (void)
+// composite: 720x480 (NTSC; 720x576 PAL is not supported yet);
+// VGA666: N x 240, N a multiple of GAME_W
+unsigned CCrtOut::Detect (void)
 {
 #ifdef PROJECT_FORCE_CRT
-	return TRUE;			// QEMU tests
+	return CRT_COMPOSITE;		// QEMU tests
 #endif
 	CBcmPropertyTags Tags;
 	TPropertyTagDisplayDimensions Dim;
-	return    Tags.GetTag (PROPTAG_GET_DISPLAY_DIMENSIONS, &Dim, sizeof Dim)
-	       && Dim.nWidth == 720 && Dim.nHeight == 480;
+	if (!Tags.GetTag (PROPTAG_GET_DISPLAY_DIMENSIONS, &Dim, sizeof Dim))
+	{
+		return CRT_NONE;
+	}
+	if (Dim.nWidth == 720 && Dim.nHeight == 480)
+	{
+		return CRT_COMPOSITE;
+	}
+	if (Dim.nHeight == FB_H && Dim.nWidth >= GAME_W && Dim.nWidth % GAME_W == 0)
+	{
+		return CRT_DPI;
+	}
+	return CRT_NONE;
 }
 
 boolean CCrtOut::Allocate (unsigned nWidth, unsigned nHeight)
@@ -107,7 +119,7 @@ boolean CCrtOut::Initialize (void)
 	m_nDispW = Dim.nWidth;
 	m_nDispH = Dim.nHeight;
 
-	if (!Allocate (FB_W, FB_H))
+	if (!Allocate (m_nDispH == FB_H ? GAME_W : FB_W, FB_H))	// VGA666 : composite
 	{
 		return FALSE;
 	}

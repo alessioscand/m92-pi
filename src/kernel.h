@@ -186,7 +186,8 @@ private:
 	CUSBHCIDevice		m_USBHCI;
 	CEMMCDevice		m_EMMC;
 	FATFS			m_FileSystem;
-	const boolean		m_bCrt;		// composite (config.txt), decided at start-up
+	const unsigned		m_nCrt;		// CRT_NONE (HDMI), CRT_COMPOSITE, CRT_DPI
+	const boolean		m_bCrt;		// either CRT (config.txt), set at start-up
 	CVideoOut		m_Hdmi;
 	CCrtOut			m_Crt;
 	CScreen			&m_Video;	// the one in use, used through CScreen only

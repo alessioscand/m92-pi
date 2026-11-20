@@ -1,14 +1,16 @@
 /*
- * CRT output: the composite jack, 240p (see screen.h)
+ * CRT output, 240p (see screen.h): the composite jack or a VGA666 on the
+ * GPIO pins (DPI)
  *
- * Chosen at start-up when the firmware drives a standard-definition screen
- * (config.txt, the CRT block): it reports it as 720x480 and scales our
- * framebuffer to it with the HVS.
- *
- * One framebuffer for everything, 360x240: one game line per CRT line, the
- * GAME_W pixels in the middle, doubled to 720 wide by the HVS (320 -> 640,
- * the width of the arcade picture on a 720 line). Only the picture: no
- * filters, no border, no text beside it, no console text.
+ * Chosen at start-up from what the firmware drives (config.txt, crt.txt or
+ * vga666.txt), which scales our framebuffer to it with the HVS:
+ * - composite: reported as 720x480. Framebuffer 360x240, the GAME_W pixels
+ *   in the middle, doubled to 720 wide (320 -> 640, the width of the arcade
+ *   picture on a 720 line)
+ * - VGA666: reported as N x 240, N a multiple of GAME_W (1600). Framebuffer
+ *   GAME_W x 240, widened N / GAME_W times
+ * One game line per CRT line. Only the picture: no filters, no border, no
+ * text beside it, no console text.
  */
 #ifndef COMMON_CRT_H
 #define COMMON_CRT_H
@@ -17,14 +19,16 @@
 #include "smp.h"
 #include <circle/bcmframebuffer.h>
 
+enum { CRT_NONE, CRT_COMPOSITE, CRT_DPI };
+
 class CCrtOut final : public CScreen
 {
 public:
 	CCrtOut (void);
 	~CCrtOut (void);
 
-	// TRUE if the firmware drives a standard-definition screen
-	static boolean Detect (void);
+	// the CRT output the firmware drives, CRT_NONE for HDMI
+	static unsigned Detect (void);
 
 	boolean Initialize (void) override;
 

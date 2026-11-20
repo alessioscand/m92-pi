@@ -105,8 +105,11 @@ void CKernel::Log (const char *pLine, u32 nColor)
 		return;
 	}
 
-	m_Serial.Write (pLine, strlen (pLine));
-	m_Serial.Write ("\r\n", 2);
+	if (m_nCrt != CRT_DPI)			// no serial with the VGA666
+	{
+		m_Serial.Write (pLine, strlen (pLine));
+		m_Serial.Write ("\r\n", 2);
+	}
 
 	if (!m_bVideoOK || m_Video.IsGameMode ())	// never write text over the game screen
 	{
