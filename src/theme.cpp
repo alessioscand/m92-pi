@@ -57,7 +57,7 @@ const TUITheme g_Theme =
 	{0, 0}, 0, 0,				// no frame: the grid's dither
 	{10, 3},				// the columns' text further out (720p: as far as LOAD 99% fits)
 	0,					// the grid from the screen's centre
-	FALSE,					// thin lines (TRUE: a game pixel wide)
+	TRUE,					// lines a game pixel wide (FALSE: thin)
 	0					// no frame: the dither
 };
 
