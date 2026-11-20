@@ -67,12 +67,13 @@ Cores: 0 = emulation, sound and main loop; 1 = drawing the lines (`mcline`); 2 =
 
 | `common/` | |
 |---|---|
-| `screen.h`, `video.cpp` | the screen interface and its HDMI version: scaling, scanlines, bezel, status line (a CRT would be another `CScreen`) |
+| `screen.h`, `video.cpp` | the screen interface and its HDMI version: scaling, TV filters, bezel, status line (a CRT would be another `CScreen`) |
 | `ui.cpp`, `theme.h`, `fonts.h` | every menu, drawn on 304x224 in the middle; the look comes from the project's theme |
 | `race.cpp`, `raster.cpp`, `pacing.cpp` | beam racing and frame delay |
 | `input.cpp`, `audio.cpp` | USB pads and keyboard (up to 4 players, buttons A-F); HDMI audio |
 | `hiscore.cpp`, `gameinfo.cpp` | hiscores as MAME's plugin, battery RAM / EEPROM; the game info lookup |
-| `tvcore.cpp`, `report.cpp`, `stats.cpp`, `profile.cpp`, `smp.h` | COMPOSITE on core 2; the per-minute log; statistics; profiler; data shared between cores |
+| `tvcore.cpp`, `crtfx.cpp`, `composite.c` | TV filters on core 2: RGB and CRT, COMPOSITE |
+| `report.cpp`, `stats.cpp`, `profile.cpp`, `smp.h` | the per-minute log; statistics; profiler; data shared between cores |
 
 Files on the card, in `m92pi/`: `m92pi.cfg` (`cpu=`, `filter=`, `bezel=` and the testing options in `README.txt`), `pads.cfg`, `saves/<set>.dip`, `.st1`, `.nv`, `.hi` (MAME's format), `LOG.TXT`; the empty files `BENCH` and `MCTEST` start the benchmark and the multicore check.
 
