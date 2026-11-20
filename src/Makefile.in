@@ -6,7 +6,7 @@ CIRCLEHOME = @CIRCLEHOME@
 OBJS	= main.o kernel.o console.o games.o gameinfo.o gametable.o saves.o settings.o menus.o gameloop.o bench.o \
 	  report.o racing.o frame.o mcline.o \
 	  video.o crt.o ui.o theme.o font_yousquared.o font_cyberwire.o font_lander.o ziphelp.o m92_sys.o \
-	  audio.o input.o raster.o race.o profile.o fbmap.o composite.o tvcore.o stats.o pacing.o hiscore.o miniz.o
+	  audio.o input.o raster.o race.o profile.o fbmap.o composite.o tvcore.o crtfx.o stats.o pacing.o hiscore.o miniz.o
 
 # The M92 core (C++20 with the standard library) is built apart, with its own
 # flags, into libm92.a: Circle's rules (no standard C++ library) apply to
@@ -57,5 +57,8 @@ EXTRALIBS += "$(shell $(CPP) $(ARCH) -print-file-name=libstdc++.a)" \
 	     "$(shell $(CPP) $(ARCH) -print-file-name=libc.a)"
 CRTBEGIN = "$(shell $(CPP) $(ARCH) -print-file-name=crtbegin.o)"
 CRTEND   = "$(shell $(CPP) $(ARCH) -print-file-name=crtend.o)"
+
+# TV FILTER RGB and CRT: per screen pixel, vectorized
+crtfx.o: OPTIMIZE = -O3 -ffast-math
 
 -include $(DEPS)

@@ -1,6 +1,6 @@
 # m92-pi - Technical notes
 
-Bare-metal Irem M92 and M90/M97 emulator for Raspberry Pi 3 & 4, with highly responsive input. The front-end (video, beam racing, COMPOSITE filter, pads, audio) is shared with neo-pi and s16-pi; the cores are new and reuse MAME's code wherever MAME has it.
+Bare-metal Irem M92 and M90/M97 emulator for Raspberry Pi 3 & 4, with highly responsive input. The front-end (video, beam racing, TV filters, pads, audio) is shared with neo-pi and s16-pi; the cores are new and reuse MAME's code wherever MAME has it.
 
 Website: <https://alessioscand.github.io/m92-pi/>
 
@@ -53,7 +53,7 @@ MAME's accuracy without porting MAME: the CPU cores and chip logic are MAME's ow
 
 ## 4. The front-end
 
-Cores: 0 = emulation, sound and main loop; 1 = drawing the lines (`mcline`); 2 = COMPOSITE filter; 3 idle. `multicore=off` keeps everything on core 0.
+Cores: 0 = emulation, sound and main loop; 1 = drawing the lines (`mcline`); 2 = TV filters (COMPOSITE, RGB, CRT); 3 idle. `multicore=off` keeps everything on core 0.
 
 | `src/` | |
 |---|---|
@@ -102,5 +102,6 @@ m92-pi was cobbled together by Alessio Scanderebech and his much-maligned progra
 - **Aaron Giles** and Rupert Carmichael: ymfm (BSD 3-Clause).
 - **Rene Stange**: Circle (GPLv3).
 - **Shay Green** (blargg): snes_ntsc, the COMPOSITE filter (LGPL 2.1+).
+- **Hyllian**: crt-hyllian-fast, the RGB filter (MIT); **davej**: crt-pi, the CRT filter (GPL 2+); both ported from libretro's slang shaders.
 - **Rich Geldreich** and contributors: miniz (MIT).
 - **Damien Guard**: the ZX Origins font collection.

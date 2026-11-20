@@ -14,9 +14,9 @@ const char *CKernel::FilterShort (unsigned nFilter)
 {
 	switch (nFilter)
 	{
-	case FILTER_SCAN_LIGHT:	 return "SCAN-L";
-	case FILTER_SCAN_MEDIUM: return "SCAN-M";
-	case FILTER_SCAN_STRONG: return "SCAN-S";
+	case FILTER_FAST:	 return "FAST";
+	case FILTER_RGB:	 return "RGB";
+	case FILTER_CRT:	 return "CRT";
 	case FILTER_COMPOSITE:	 return "COMP";
 	default:		 return "NOFLT";
 	}
@@ -26,9 +26,9 @@ const char *CKernel::FilterName (unsigned nFilter)
 {
 	switch (nFilter)
 	{
-	case FILTER_SCAN_LIGHT:	 return "SCANLINES_LIGHT";
-	case FILTER_SCAN_MEDIUM: return "SCANLINES";
-	case FILTER_SCAN_STRONG: return "SCANLINES_STRONG";
+	case FILTER_FAST:	 return "FAST";
+	case FILTER_RGB:	 return "RGB";
+	case FILTER_CRT:	 return "CRT";
 	case FILTER_COMPOSITE:	 return "COMPOSITE";
 	default:		 return "NONE";
 	}
@@ -65,7 +65,7 @@ void CKernel::ApplyVideoMode (void)
 		m_bVideoChanged = TRUE;
 		return;
 	}
-	if (m_nFilter == FILTER_COMPOSITE && !TvReady ())
+	if (m_nFilter == FILTER_COMPOSITE && !FrameTvTables ())
 	{
 		// the filter's tables, built the first time COMPOSITE is used
 		unsigned t0 = CTimer::GetClockTicks ();
@@ -79,8 +79,8 @@ void CKernel::ApplyVideoMode (void)
 		}
 		else
 		{
-			Log ("COMPOSITE: not enough memory for the filter, scanlines instead", COLOR_ERR);
-			m_nFilter = FILTER_SCAN_MEDIUM;
+			Log ("COMPOSITE: not enough memory for the filter, FAST instead", COLOR_ERR);
+			m_nFilter = FILTER_FAST;
 		}
 	}
 	FrameSetComposite (m_nFilter == FILTER_COMPOSITE);
@@ -194,10 +194,11 @@ void CKernel::LoadConfig (void)
 	BlankComments (Text);
 
 	if (strstr (Text, "cpu=turbo"))	m_nCpuSpeed = CPU_TURBO;
-	if (strstr (Text, "filter=COMPOSITE"))			m_nFilter = FILTER_COMPOSITE;
-	else if (strstr (Text, "filter=SCANLINES_LIGHT"))	m_nFilter = FILTER_SCAN_LIGHT;
-	else if (strstr (Text, "filter=SCANLINES_STRONG"))	m_nFilter = FILTER_SCAN_STRONG;
-	else if (strstr (Text, "filter=SCANLINES"))		m_nFilter = FILTER_SCAN_MEDIUM;
+	if (strstr (Text, "filter=COMPOSITE"))		m_nFilter = FILTER_COMPOSITE;
+	else if (strstr (Text, "filter=RGB"))		m_nFilter = FILTER_RGB;
+	else if (strstr (Text, "filter=CRT"))		m_nFilter = FILTER_CRT;
+	else if (strstr (Text, "filter=FAST")
+		 || strstr (Text, "filter=SCANLINES"))	m_nFilter = FILTER_FAST;	// (and the old LIGHT, STRONG)
 	if (strstr (Text, "scaler=cpu"))	m_bHVS = FALSE;
 	if (strstr (Text, "bezel=off"))			m_nBezel = 0;
 	else if (strstr (Text, "bezel=full"))		m_nBezel = BEZEL_GRID | BEZEL_INFO;

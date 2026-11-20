@@ -1,5 +1,16 @@
-m92-pi 1.2.0 - Bare-metal Irem M92 and M90 emulator for Raspberry Pi 3 and 4
+m92-pi 1.2.1 - Bare-metal Irem M92 and M90 emulator for Raspberry Pi 3 and 4
 ============================================================================
+
+WHAT'S NEW IN 1.2.1
+
+  - OPTIONS > SCANLINES is now TV FILTER, with four looks: FAST (the
+    simple scanlines), RGB (an RGB monitor, from Hyllian's
+    crt-hyllian-fast), CRT (a CRT TV with its RGB mask, from davej's
+    crt-pi) and COMPOSITE. RGB and CRT are drawn line by line on their
+    own CPU core: no added lag.
+  - A finer look: thin panel frames and a bolder frame for the game
+    list.
+  - Smaller fixes and tidying.
 
 WHAT'S NEW IN 1.2.0
 
@@ -38,7 +49,7 @@ START-UP
     at once. GAME LIST in the in-game menu still opens the list.
   - Game list: Up/Down to choose, Left/Right to jump by 8, A or Start to
     play, D for OPTIONS. A long title scrolls. Bottom left: the MAME set
-    name and region. With no pad connected, NO PAD on the left.
+    name and region.
   - Benchmark: an empty file named m92pi/BENCH (no extension) runs one on
     the selected game before normal play: 30 seconds of the game's demo,
     then 60 seconds measured. Do not touch anything. Results in
@@ -114,13 +125,16 @@ OPTIONS MENU (D in the game list, or from the in-game menu)
                 original hardware slows down. Some games may behave
                 differently; NORMAL is the accurate setting. On a Pi 3,
                 TURBO may slow down the heaviest games.
-  SCANLINES     OFF / LIGHT / MEDIUM / STRONG / COMPOSITE. COMPOSITE has no
-                scanlines: blargg's NTSC filter gives the look of a
-                composite video connection of the time. Each line is
-                filtered as soon as it is drawn, on its own CPU core: no
-                added lag. On a Pi 3 the scanlines and COMPOSITE need
-                multicore: with multicore=off this item shows MULTICORE
-                OFF.
+  TV FILTER     OFF    the plain picture
+                FAST   simple scanlines, the lightest
+                RGB    an RGB monitor (Hyllian's crt-hyllian-fast)
+                CRT    a CRT TV with its RGB mask (davej's crt-pi)
+                COMPOSITE  blargg's NTSC filter: the look of a composite
+                       video connection of the time
+                RGB, CRT and COMPOSITE filter each line as soon as it is
+                drawn, on its own CPU core: no added lag. On a Pi 3 the
+                filters need multicore: with multicore=off this item
+                shows MULTICORE OFF.
   BEZEL         The space around the picture:
                 OFF    black
                 TEXT   game information and basic controls on black
@@ -128,7 +142,7 @@ OPTIONS MENU (D in the game list, or from the in-game menu)
                 GRID   the dark grid
                 FULL   the complete bezel, with game information above
                        the picture and button assignments below (at
-                       1080p)
+                       1080p; the default)
   CONTROLS      Set up a pad (with several pads, press a button on the one
                 to set up). To skip a function, press a button already
                 assigned.
