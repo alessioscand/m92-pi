@@ -18,9 +18,7 @@ hdmi_mode=16
 scaling_kernel=8
 cec_osd_name=M92-PI
 
-# Fast start-up, fixed GPU clock; the cut-down firmware (lighter: no
-# video codecs or camera, which m92-pi does not use; 16 MB GPU memory)
-gpu_mem=16
+# Fast start-up, fixed GPU clock
 disable_splash=1
 boot_delay=0
 force_eeprom_read=0
@@ -29,21 +27,15 @@ core_freq_fixed=1
 # Overclock: remove the # in front of arm_freq (heatsink needed)
 [pi3]
 kernel=kernel8.img
-start_file=start_cd.elf
-fixup_file=fixup_cd.dat
 #arm_freq=1300
 
 [pi3+]
 kernel=kernel8.img
-start_file=start_cd.elf
-fixup_file=fixup_cd.dat
 #arm_freq=1500
 
 [pi4]
 armstub=armstub8-rpi4.bin
 kernel=kernel8-rpi4.img
-start_file=start4cd.elf
-fixup_file=fixup4cd.dat
 max_framebuffers=2
 #arm_freq=1900
 
