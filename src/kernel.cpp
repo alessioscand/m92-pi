@@ -125,7 +125,7 @@ TShutdownMode CKernel::Run (void)
 	f_mkdir (SHOT_DIR);
 	FrameSetup (&m_Video);
 	LoadConfig ();
-	// the scanlines need a Pi 4, or a Pi 3 with core 1 drawing the lines
+	// the TV filters need a Pi 4, or a Pi 3 with core 1 drawing the lines
 	m_bFilterAllowed = pInfo->GetModelMajor () >= 4 || m_bMultiCore;
 	if (!m_bFilterAllowed)
 	{
