@@ -86,7 +86,7 @@ boolean CKernel::Initialize (void)
 {
 	m_bVideoOK = m_Video.Initialize ();
 
-	if (m_nCrt != CRT_DPI)		// VGA666: GPIO 14 and 15 carry colour bits
+	if (m_nCrt != CRT_DPI)		// VGA666, RGB-Pi: GPIO 14 and 15 carry colour bits
 	{
 		m_Serial.Initialize (115200);
 	}
@@ -118,7 +118,7 @@ TShutdownMode CKernel::Run (void)
 		  pInfo->GetMachineName (), pInfo->GetRAMSize (), nGpuMB,
 		  m_CPUThrottle.GetClockRate () / 1000000, m_CPUThrottle.GetTemperature ());
 	Log (Line, COLOR_TEXT);
-	snprintf (Line, sizeof Line, "%s %ux%u, pixel order %s", m_nCrt == CRT_DPI ? "CRT (VGA666, DPI)"
+	snprintf (Line, sizeof Line, "%s %ux%u, pixel order %s", m_nCrt == CRT_DPI ? (CCrtOut::IsRgbPi () ? "CRT (RGB-Pi, DPI)" : "CRT (VGA666, DPI)")
 		  : m_bCrt ? "CRT (composite)" : "HDMI",
 		  m_Video.GetWidth (), m_Video.GetHeight (), m_Video.GetPixelOrder () ? "RGB" : "BGR");
 	Log (Line, COLOR_TEXT);
@@ -137,7 +137,7 @@ TShutdownMode CKernel::Run (void)
 	f_mkdir (SHOT_DIR);
 	FrameSetup (&m_Video);
 	LoadConfig ();
-	// the scanlines need a Pi 4, or a Pi 3 with core 1 drawing the lines
+	// the TV filters need a Pi 4, or a Pi 3 with core 1 drawing the lines
 	m_bFilterAllowed = pInfo->GetModelMajor () >= 4 || m_bMultiCore;
 	if (!m_bFilterAllowed)
 	{

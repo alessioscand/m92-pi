@@ -7,8 +7,8 @@
  * - composite: reported as 720x480. Framebuffer 360x240, the GAME_W pixels
  *   in the middle, doubled to 720 wide (320 -> 640, the width of the arcade
  *   picture on a 720 line)
- * - VGA666: reported as N x 240, N a multiple of GAME_W (1600). Framebuffer
- *   GAME_W x 240, widened N / GAME_W times
+ * - VGA666 or the first RGB-Pi (DPI): reported as N x 240, N a multiple of
+ *   GAME_W (1600). Framebuffer GAME_W x 240, widened N / GAME_W times
  * One game line per CRT line. Only the picture: no filters, no border, no
  * text beside it, no console text.
  */
@@ -29,6 +29,8 @@ public:
 
 	// the CRT output the firmware drives, CRT_NONE for HDMI
 	static unsigned Detect (void);
+	// CRT_DPI: the first RGB-Pi (GPIO 18 and 19 carry the sound), else a VGA666
+	static boolean IsRgbPi (void);
 
 	boolean Initialize (void) override;
 
@@ -58,7 +60,7 @@ public:
 	void DrawText (unsigned, unsigned, unsigned, const char *, u32, u32) override {}
 	void ClearRows (unsigned nBuffer, unsigned, unsigned, u32 nColor) override { Clear (nBuffer, nColor); }
 
-	void DrawGame (const u32 *pSource, boolean bFilter = TRUE) override;
+	void DrawGame (const u32 *pSource, boolean bFilter = TRUE, boolean bCanvas = FALSE) override;
 	void DrawGameLine (const u32 *pSource, unsigned y, u32 *, u32 *) override
 	{
 		DrawGameLineTo (SharedLoad (m_bRacing) ? m_nBack ^ 1 : m_nBack, pSource, y, FALSE);

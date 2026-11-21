@@ -3,28 +3,12 @@ m92-pi 1.2.1 - Bare-metal Irem M92 and M90 emulator for Raspberry Pi 3 and 4
 
 WHAT'S NEW IN 1.2.1
 
-  - OPTIONS > SCANLINES is now TV FILTER, with four looks: FAST (the
-    simple scanlines), RGB (an RGB monitor, from Hyllian's
-    crt-hyllian-fast), CRT (a CRT TV with its RGB mask, from davej's
-    crt-pi) and COMPOSITE. RGB and CRT are drawn line by line on their
-    own CPU core: no added lag.
-  - A finer look: thin panel frames and a bolder frame for the game
-    list.
-  - Smaller fixes and tidying.
-
-WHAT'S NEW IN 1.2.0
-
-  - A new look, built around a bezel that frames the game with a dark
-    grid. At 1080p, it also shows the game's title, developer and year
-    above the picture, with a custom button layout below for every game.
-    Prefer the bare game screen? OPTIONS > BEZEL lets you strip it all
-    away, right down to black.
-  - The status line and the messages sit beside the picture, never over
-    the game, at 720p too, and they no longer flicker.
-  - Game names, years and publishers are now built in: m92pi/list.txt
-    is no longer needed.
-  - Under-the-hood improvements, bug fixes and updates shared with
-    its siblings s16-pi, neo-pi and nes-pi.
+  - New shaders: OPTIONS > SCANLINES is now TV FILTER, with RGB (an RGB
+    monitor, from Hyllian's crt-hyllian-fast) and CRT (a CRT TV with its
+    RGB mask, from davej's crt-pi) next to FAST (the simple scanlines)
+    and COMPOSITE. RGB and CRT are drawn line by line on their own CPU
+    core: no added lag.
+  - Bug fixes, and code aligned with its siblings s16-pi, neo-pi and nes-pi.
 
 SET-UP
 

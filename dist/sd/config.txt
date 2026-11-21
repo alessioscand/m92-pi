@@ -41,9 +41,11 @@ max_framebuffers=2
 
 [all]
 
-# CRT (240p, the sound from the jack): remove the # in front of ONE of
-# the two lines below, then restart; put it back for HDMI.
-# Composite jack, NTSC (HDMI is then off), settings in crt.txt:
+# CRT (240p): remove the # in front of ONE of the three lines below,
+# then restart; put it back for HDMI.
+# Composite jack, NTSC (HDMI is then off), the sound from the jack:
 #include crt.txt
-# VGA666 on the GPIO pins, 15 kHz screens only, settings in vga666.txt:
+# VGA666 on the GPIO pins, 15 kHz screens only, the sound from the jack:
 #include vga666.txt
+# The first RGB-Pi (GPIO to SCART), the sound in the SCART (Pi 3):
+#include rgbpi.txt

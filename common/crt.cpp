@@ -5,6 +5,8 @@
 #include "theme.h"
 #include "fbmap.h"
 #include <circle/bcmpropertytags.h>
+#include <circle/bcm2835.h>
+#include <circle/memio.h>
 #include <circle/util.h>
 
 #define PROPTAG_RELEASE_BUFFER	0x00048001
@@ -62,6 +64,14 @@ unsigned CCrtOut::Detect (void)
 		return CRT_DPI;
 	}
 	return CRT_NONE;
+}
+
+// rgbpi.txt sets GPIO 18 and 19 to the PWM sound (alternate function 5);
+// vga666.txt to DPI (alternate function 2)
+boolean CCrtOut::IsRgbPi (void)
+{
+	const u32 nFsel1 = read32 (ARM_GPIO_BASE + 0x04);	// GPIO 10-19
+	return ((nFsel1 >> 24) & 7) == 2;			// GPIO 18: ALT5
 }
 
 boolean CCrtOut::Allocate (unsigned nWidth, unsigned nHeight)
@@ -176,8 +186,10 @@ void CCrtOut::Clear (unsigned nBuffer, u32 nColor)
 	}
 }
 
-void CCrtOut::DrawGame (const u32 *pSource, boolean bFilter)
+// bCanvas: the menus' canvas is the picture in the projects with a CRT
+void CCrtOut::DrawGame (const u32 *pSource, boolean bFilter, boolean bCanvas)
 {
+	(void) bCanvas;
 	for (unsigned y = 0; y < GAME_H; y++)
 	{
 		DrawGameLineTo (m_nBack, pSource, y, !bFilter);

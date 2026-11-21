@@ -58,7 +58,8 @@ const TUITheme g_Theme =
 	{10, 3},				// the columns' text further out (720p: as far as LOAD 99% fits)
 	0,					// the grid from the screen's centre
 	FALSE,					// thin lines (TRUE: a game pixel wide)
-	0					// no frame: the dither
+	0,					// no frame: the dither
+	0
 };
 
 // the grid: a monitor test crosshatch at 75%, lines every 20 game pixels and

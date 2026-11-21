@@ -204,7 +204,7 @@ void CKernel::LoadConfig (void)
 	else if (strstr (Text, "bezel=full"))		m_nBezel = BEZEL_GRID | BEZEL_INFO;
 	else if (strstr (Text, "bezel=grid"))		m_nBezel = BEZEL_GRID;
 	else if (strstr (Text, "bezel=text"))		m_nBezel = BEZEL_INFO;
-	// (multicore and Pi 3 scanlines: decided after LoadConfig)
+	// (multicore and the Pi 3 TV filters: decided after LoadConfig)
 	// USB pads polled every 1 ms; usbpoll=500 / 250: 2 / 4 ms; usbpoll=native:
 	// the device's own interval
 	if (strstr (Text, "usbpoll=native"))	g_nUSBInterruptPollMs = 0;
