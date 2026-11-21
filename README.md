@@ -23,14 +23,14 @@ third_party/   code by others: MAME's NEC CPUs, ymfm, Z80, miniz, snes_ntsc, Pi 
 tools/         generators of the game and hiscore tables from MAME's sources
 harness/       Linux test program (m92test)
 test/          regression check (hashrun), beam racing host test, made-up ROM sets
-patches/       Circle patches (USB polling, XInput pads), as neo-pi
+patches/       Circle patches (USB polling, XInput pads)
 dist/sd/       what goes on the SD card besides kernels and firmware
 docs/          the site (GitHub Pages)
 ```
 
 ## 2. Building
 
-Linux x86_64, set up as neo-pi (see its `BUILD.md`): xPack `aarch64-none-elf-gcc` 14.2.1-1.1 in `toolchain/`, Circle commit `7a81e1b` in `circle-rpi4mc/`, `circle-rpi3mc/` and `circle-qemumc/` (`AARCH = 64`, `RASPPI = 4` or `3`, `STDLIB_SUPPORT = 1`, `-DKERNEL_MAX_SIZE=0x1000000 -DARM_ALLOW_MULTI_CORE`; the QEMU copy also `-DNO_SDHOST -DNO_SCREEN_DMA_BURST_LENGTH`), patched with the two scripts in `patches/`, then `./makeall` and `make` in `addon/SDCard` and `addon/fatfs`.
+Linux x86_64 with xPack `aarch64-none-elf-gcc` 14.2.1-1.1 in `toolchain/` and Circle commit `7a81e1b` in `circle-rpi4mc/`, `circle-rpi3mc/` and `circle-qemumc/` (`AARCH = 64`, `RASPPI = 4` or `3`, `STDLIB_SUPPORT = 1`, `-DKERNEL_MAX_SIZE=0x1000000 -DARM_ALLOW_MULTI_CORE`; the QEMU copy also `-DNO_SDHOST -DNO_SCREEN_DMA_BURST_LENGTH`), patched with the two scripts in `patches/`, then `./makeall` and `make` in `addon/SDCard` and `addon/fatfs`.
 
 ```
 ./build.sh all          # build/rpi4/kernel8-rpi4.img and build/rpi3/kernel8.img
@@ -105,4 +105,5 @@ m92-pi was cobbled together by Alessio Scanderebech and his much-maligned progra
 - **Shay Green** (blargg): snes_ntsc, the COMPOSITE filter (LGPL 2.1+).
 - **Hyllian**: crt-hyllian-fast, the RGB filter (MIT); **davej**: crt-pi, the CRT filter (GPL 2+); both ported from libretro's slang shaders.
 - **Rich Geldreich** and contributors: miniz (MIT).
+- **Leezer** and contributors: the hiscore.dat of MAME's hiscore plugin.
 - **Damien Guard**: the ZX Origins font collection.
